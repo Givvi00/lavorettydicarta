@@ -30,8 +30,18 @@ export interface Material {
   stockQty: number;
   minStock?: number;
   notes?: string;
+  packageQty?: number; // pezzi per confezione
+  packagePrice?: number; // prezzo di acquisto dell'intera confezione
+  photo?: string; // immagine di riferimento, data URL
+  purchaseUrl?: string; // link dove acquistarlo (es. Amazon, Cricut store...)
   createdAt: number;
   updatedAt: number;
+}
+
+export interface Category {
+  id: ID;
+  name: string;
+  createdAt: number;
 }
 
 export interface BomLine {

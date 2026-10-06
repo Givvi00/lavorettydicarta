@@ -13,31 +13,59 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Package } from 'lucide-react';
+import { Package, Tags, Trash2 } from 'lucide-react';
 import { formatEUR, totalCostOf, marginOf } from '@/utils/calc';
-import type { BomLine, Product, ProductType } from '@/types';
+import type { BomLine, Category, Product, ProductType } from '@/types';
+
+const NEW_CATEGORY = '__new__';
 
 export function Prodotti() {
-  const { products, materials, upsertProduct, deleteProduct } = useStore();
+  const { products, materials, categories, upsertProduct, deleteProduct, upsertCategory, deleteCategory } =
+    useStore();
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
+  const [managingCategories, setManagingCategories] = useState(false);
   const [query, setQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
 
-  const filtered = products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
+  const filtered = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(query.toLowerCase()) &&
+      (!categoryFilter || p.category === categoryFilter)
+  );
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold md:text-2xl">Prodotti</h1>
-        <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+        <div className="flex gap-2">
+          <SecondaryButton onClick={() => setManagingCategories(true)}>
+            <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
+          </SecondaryButton>
+          <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+        </div>
       </div>
 
-      <Input
-        className="md:max-w-xs"
-        placeholder="Cerca prodotto..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Input
+          className="sm:max-w-xs"
+          placeholder="Cerca prodotto..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <Select
+          className="sm:max-w-xs"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="">Tutte le categorie</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.name}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 && (
@@ -49,8 +77,9 @@ export function Prodotti() {
           return (
             <Card key={p.id} className="flex items-center justify-between">
               <div onClick={() => setEditing(p)} className="flex-1 cursor-pointer text-left">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <p className="font-semibold">{p.name}</p>
+                  {p.category && <Badge tone="pink">{p.category}</Badge>}
                   <Badge tone={p.type === 'pronto' ? 'default' : 'accent'}>
                     {p.type === 'pronto' ? 'pronto' : 'personalizzabile'}
                   </Badge>
@@ -73,6 +102,8 @@ export function Prodotti() {
         <ProductForm
           open={creating}
           materials={materials}
+          categories={categories}
+          onAddCategory={(name) => upsertCategory({ name })}
           onClose={() => setCreating(false)}
           onSave={async (data) => {
             await upsertProduct(data);
@@ -86,6 +117,8 @@ export function Prodotti() {
           open={!!editing}
           initial={editing}
           materials={materials}
+          categories={categories}
+          onAddCategory={(name) => upsertCategory({ name })}
           onClose={() => setEditing(null)}
           onSave={async (data) => {
             await upsertProduct({ ...data, id: editing.id });
@@ -97,7 +130,102 @@ export function Prodotti() {
           }}
         />
       )}
+
+      {managingCategories && (
+        <CategoriesModal
+          open={managingCategories}
+          categories={categories}
+          productCountFor={(name) => products.filter((p) => p.category === name).length}
+          onAdd={(name) => upsertCategory({ name })}
+          onRename={(id, name) => upsertCategory({ id, name })}
+          onDelete={(id) => deleteCategory(id)}
+          onClose={() => setManagingCategories(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function CategoriesModal({
+  open,
+  categories,
+  productCountFor,
+  onAdd,
+  onRename,
+  onDelete,
+  onClose,
+}: {
+  open: boolean;
+  categories: Category[];
+  productCountFor: (name: string) => number;
+  onAdd: (name: string) => void;
+  onRename: (id: string, name: string) => void;
+  onDelete: (id: string) => void;
+  onClose: () => void;
+}) {
+  const [newName, setNewName] = useState('');
+
+  return (
+    <Modal open={open} onClose={onClose} title="Categorie prodotti">
+      <div className="flex flex-col gap-3">
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const name = newName.trim();
+            if (!name) return;
+            onAdd(name);
+            setNewName('');
+          }}
+        >
+          <Input
+            className="flex-1"
+            placeholder="Nuova categoria (es. Shadowbox)"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            autoFocus
+          />
+          <PrimaryButton type="submit">Aggiungi</PrimaryButton>
+        </form>
+
+        {categories.length === 0 ? (
+          <p className="text-sm text-lc-muted">Nessuna categoria ancora: aggiungine una qui sopra.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {categories.map((c) => (
+              <li key={c.id} className="flex items-center gap-2">
+                <Input
+                  className="flex-1"
+                  defaultValue={c.name}
+                  onBlur={(e) => {
+                    const name = e.target.value.trim();
+                    if (name && name !== c.name) onRename(c.id, name);
+                    else e.target.value = c.name;
+                  }}
+                />
+                <span className="w-14 shrink-0 text-xs text-lc-muted">
+                  {productCountFor(c.name)} prod.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onDelete(c.id)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lc-danger transition-colors hover:bg-lc-danger/10"
+                  aria-label="Elimina categoria"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="flex justify-end">
+          <SecondaryButton type="button" onClick={onClose}>
+            Fatto
+          </SecondaryButton>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -108,6 +236,8 @@ function ProductForm({
   onDelete,
   initial,
   materials,
+  categories,
+  onAddCategory,
 }: {
   open: boolean;
   onClose: () => void;
@@ -115,9 +245,13 @@ function ProductForm({
   onDelete?: () => void;
   initial?: Product;
   materials: ReturnType<typeof useStore.getState>['materials'];
+  categories: Category[];
+  onAddCategory: (name: string) => void;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [category, setCategory] = useState(initial?.category ?? '');
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [type, setType] = useState<ProductType>(initial?.type ?? 'personalizzabile');
   const [salePrice, setSalePrice] = useState(initial?.salePrice ?? 0);
   const [laborCost, setLaborCost] = useState(initial?.laborCost ?? 0);
@@ -146,6 +280,18 @@ function ProductForm({
     setBom(bom.filter((_, i) => i !== index));
   }
 
+  function confirmNewCategory() {
+    const name = newCategoryName.trim();
+    if (!name) {
+      setAddingCategory(false);
+      return;
+    }
+    onAddCategory(name);
+    setCategory(name);
+    setNewCategoryName('');
+    setAddingCategory(false);
+  }
+
   return (
     <Modal open={open} onClose={onClose} title={initial ? 'Modifica prodotto' : 'Nuovo prodotto'}>
       <form
@@ -161,7 +307,45 @@ function ProductForm({
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Categoria">
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Shadowbox, Biglietti..." />
+            {addingCategory ? (
+              <div className="flex gap-1.5">
+                <Input
+                  className="flex-1"
+                  autoFocus
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      confirmNewCategory();
+                    }
+                  }}
+                  placeholder="Nome categoria"
+                />
+                <SecondaryButton type="button" className="px-3" onClick={confirmNewCategory}>
+                  Ok
+                </SecondaryButton>
+              </div>
+            ) : (
+              <Select
+                value={category}
+                onChange={(e) => {
+                  if (e.target.value === NEW_CATEGORY) {
+                    setAddingCategory(true);
+                  } else {
+                    setCategory(e.target.value);
+                  }
+                }}
+              >
+                <option value="">Nessuna categoria</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+                <option value={NEW_CATEGORY}>+ Nuova categoria...</option>
+              </Select>
+            )}
           </Field>
           <Field label="Tipo">
             <Select value={type} onChange={(e) => setType(e.target.value as ProductType)}>

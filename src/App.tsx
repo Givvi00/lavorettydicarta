@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { LayoutDashboard, Users, Boxes, Package, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Users, Boxes, Package, ClipboardList, Sun, Moon } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { useTheme } from '@/hooks/useTheme';
 import { Dashboard } from '@/pages/Dashboard';
 import { Clienti } from '@/pages/Clienti';
 import { Materiali } from '@/pages/Materiali';
@@ -22,6 +23,7 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
 function App() {
   const [tab, setTab] = useState<Tab>('dashboard');
   const { ready, load } = useStore();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     load();
@@ -64,6 +66,15 @@ function App() {
             );
           })}
         </nav>
+        <div className="border-t-2 border-lc-border p-3">
+          <button
+            onClick={toggleTheme}
+            className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold text-lc-muted transition-colors hover:bg-lc-border/30 hover:text-lc-text"
+          >
+            {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
+            {theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'}
+          </button>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -72,12 +83,19 @@ function App() {
           <div className="lc-paper-bg pointer-events-none absolute inset-0 opacity-40" />
           <div className="relative flex items-center gap-3">
             <img src={logo} alt="Lavoretty di Carta" className="h-11 w-11 rounded-2xl shadow-soft" />
-            <div>
+            <div className="flex-1">
               <h1 className="font-display text-lg font-semibold leading-tight text-lc-accent-ink">
                 Lavoretty di Carta
               </h1>
               <p className="text-xs font-semibold text-lc-accent-ink/70">il tuo angolo creativo ✂️✨</p>
             </div>
+            <button
+              onClick={toggleTheme}
+              aria-label="Cambia tema"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 text-lc-accent-ink transition-transform active:scale-90"
+            >
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
           </div>
         </header>
 

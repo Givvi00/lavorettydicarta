@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import * as db from '@/services/db';
 import { newId } from '@/utils/calc';
-import type { Customer, Material, Product, Order, OrderStatus } from '@/types';
+import type { Customer, Material, Product, Order, OrderStatus, Category } from '@/types';
 
 interface LcState {
   ready: boolean;
@@ -9,11 +9,15 @@ interface LcState {
   materials: Material[];
   products: Product[];
   orders: Order[];
+  categories: Category[];
 
   load: () => Promise<void>;
 
   upsertCustomer: (c: Partial<Customer> & { id?: string }) => Promise<Customer>;
   deleteCustomer: (id: string) => Promise<void>;
+
+  upsertCategory: (c: Partial<Category> & { id?: string }) => Promise<Category>;
+  deleteCategory: (id: string) => Promise<void>;
 
   upsertMaterial: (m: Partial<Material> & { id?: string }) => Promise<Material>;
   deleteMaterial: (id: string) => Promise<void>;
@@ -32,21 +36,46 @@ export const useStore = create<LcState>((set, get) => ({
   materials: [],
   products: [],
   orders: [],
+  categories: [],
 
   load: async () => {
-    const [customers, materials, products, orders] = await Promise.all([
+    const [customers, materials, products, orders, categories] = await Promise.all([
       db.getAll('customers'),
       db.getAll('materials'),
       db.getAll('products'),
       db.getAll('orders'),
+      db.getAll('categories'),
     ]);
     set({
       customers: customers.sort((a, b) => a.name.localeCompare(b.name)),
       materials: materials.sort((a, b) => a.name.localeCompare(b.name)),
       products: products.sort((a, b) => a.name.localeCompare(b.name)),
       orders: orders.sort((a, b) => b.createdAt - a.createdAt),
+      categories: categories.sort((a, b) => a.name.localeCompare(b.name)),
       ready: true,
     });
+  },
+
+  upsertCategory: async (input) => {
+    const now = Date.now();
+    const existing = input.id ? get().categories.find((c) => c.id === input.id) : undefined;
+    const record: Category = {
+      id: existing?.id ?? input.id ?? newId(),
+      name: input.name ?? existing?.name ?? '',
+      createdAt: existing?.createdAt ?? now,
+    };
+    await db.put('categories', record);
+    set((s) => ({
+      categories: [...s.categories.filter((c) => c.id !== record.id), record].sort((a, b) =>
+        a.name.localeCompare(b.name)
+      ),
+    }));
+    return record;
+  },
+
+  deleteCategory: async (id) => {
+    await db.remove('categories', id);
+    set((s) => ({ categories: s.categories.filter((c) => c.id !== id) }));
   },
 
   upsertCustomer: async (input) => {
@@ -88,6 +117,10 @@ export const useStore = create<LcState>((set, get) => ({
       stockQty: input.stockQty ?? existing?.stockQty ?? 0,
       minStock: input.minStock ?? existing?.minStock,
       notes: input.notes ?? existing?.notes,
+      packageQty: input.packageQty ?? existing?.packageQty,
+      packagePrice: input.packagePrice ?? existing?.packagePrice,
+      photo: input.photo ?? existing?.photo,
+      purchaseUrl: input.purchaseUrl ?? existing?.purchaseUrl,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };

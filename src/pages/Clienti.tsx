@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Users2 } from 'lucide-react';
+import { Users2, MessageCircle } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Card, PrimaryButton, SecondaryButton, DangerButton, Modal, Field, Input, Textarea, EmptyState } from '@/components/ui/primitives';
+import { toWhatsAppLink } from '@/utils/phone';
 import type { Customer } from '@/types';
 
 export function Clienti() {
@@ -30,22 +31,39 @@ export function Clienti() {
         {filtered.length === 0 && (
           <EmptyState icon={<Users2 />} text="Nessun cliente ancora: aggiungi il primo con “+ Nuovo”." />
         )}
-        {filtered.map((c) => (
-          <Card key={c.id} className="flex cursor-pointer items-center justify-between">
-            <div onClick={() => setEditing(c)} className="flex flex-1 items-center gap-3 text-left">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
-                {c.name.slice(0, 1).toUpperCase()}
-              </span>
-              <div>
-                <p className="font-semibold">{c.name}</p>
-                <p className="text-sm text-lc-muted">
-                  {[c.phone, c.email].filter(Boolean).join(' · ') || 'Nessun contatto'}
-                </p>
+        {filtered.map((c) => {
+          const wa = toWhatsAppLink(c.phone);
+          return (
+            <Card key={c.id} className="flex items-center justify-between gap-2">
+              <div onClick={() => setEditing(c)} className="flex flex-1 cursor-pointer items-center gap-3 text-left">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
+                  {c.name.slice(0, 1).toUpperCase()}
+                </span>
+                <div>
+                  <p className="font-semibold">{c.name}</p>
+                  <p className="text-sm text-lc-muted">
+                    {[c.phone, c.email].filter(Boolean).join(' · ') || 'Nessun contatto'}
+                  </p>
+                </div>
               </div>
-            </div>
-            <SecondaryButton onClick={() => setEditing(c)}>Modifica</SecondaryButton>
-          </Card>
-        ))}
+              <div className="flex shrink-0 items-center gap-1.5">
+                {wa && (
+                  <a
+                    href={wa}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label="Apri chat WhatsApp"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-lc-success/15 text-lc-success transition-transform active:scale-90"
+                  >
+                    <MessageCircle size={18} />
+                  </a>
+                )}
+                <SecondaryButton onClick={() => setEditing(c)}>Modifica</SecondaryButton>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       {creating && (
@@ -97,6 +115,8 @@ function CustomerForm({
   const [instagram, setInstagram] = useState(initial?.instagram ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
 
+  const wa = toWhatsAppLink(phone);
+
   return (
     <Modal open={open} onClose={onClose} title={initial ? 'Modifica cliente' : 'Nuovo cliente'}>
       <form
@@ -111,7 +131,24 @@ function CustomerForm({
           <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </Field>
         <Field label="Telefono">
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <div className="flex gap-2">
+            <Input
+              className="flex-1"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="es. 333 1234567"
+            />
+            {wa && (
+              <a
+                href={wa}
+                target="_blank"
+                rel="noreferrer"
+                className="flex shrink-0 items-center gap-1.5 rounded-btn border-2 border-lc-success/30 bg-lc-success/15 px-3 text-sm font-semibold text-lc-success transition-transform active:scale-95"
+              >
+                <MessageCircle size={16} /> WhatsApp
+              </a>
+            )}
+          </div>
         </Field>
         <Field label="Email">
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
