@@ -14,6 +14,7 @@ import {
   EmptyState,
 } from '@/components/ui/primitives';
 import { Package, Tags, Trash2 } from 'lucide-react';
+import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { formatEUR, totalCostOf, marginOf } from '@/utils/calc';
 import type { BomLine, Category, Product, ProductType } from '@/types';
 
@@ -75,8 +76,16 @@ export function Prodotti() {
           const cost = totalCostOf(p, materials);
           const margin = marginOf(p, materials);
           return (
-            <Card key={p.id} className="flex items-center justify-between">
-              <div onClick={() => setEditing(p)} className="flex-1 cursor-pointer text-left">
+            <Card key={p.id} className="flex items-center gap-3">
+              <div onClick={() => setEditing(p)} className="flex flex-1 cursor-pointer items-center gap-3 text-left">
+                {p.photo ? (
+                  <img src={p.photo} alt="" className="h-11 w-11 shrink-0 rounded-btn object-cover" />
+                ) : (
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-lc-accent/20 text-lc-olive">
+                    <Package size={18} />
+                  </span>
+                )}
+                <div>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="font-semibold">{p.name}</p>
                   {p.category && <Badge tone="pink">{p.category}</Badge>}
@@ -91,6 +100,7 @@ export function Prodotti() {
                     {formatEUR(margin)}
                   </span>
                 </p>
+                </div>
               </div>
               <SecondaryButton onClick={() => setEditing(p)}>Modifica</SecondaryButton>
             </Card>
@@ -258,6 +268,7 @@ function ProductForm({
   const [description, setDescription] = useState(initial?.description ?? '');
   const [active, setActive] = useState(initial?.active ?? true);
   const [bom, setBom] = useState<BomLine[]>(initial?.bom ?? []);
+  const [photo, setPhoto] = useState(initial?.photo ?? '');
 
   const materialCost = bom.reduce((sum, line) => {
     const mat = materials.find((m) => m.id === line.materialId);
@@ -299,9 +310,11 @@ function ProductForm({
         onSubmit={(e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          onSave({ name: name.trim(), category, type, salePrice, laborCost, description, active, bom });
+          onSave({ name: name.trim(), category, type, salePrice, laborCost, description, active, bom, photo });
         }}
       >
+        <PhotoPicker value={photo} onChange={setPhoto} />
+
         <Field label="Nome">
           <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </Field>

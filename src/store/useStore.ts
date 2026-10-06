@@ -148,6 +148,7 @@ export const useStore = create<LcState>((set, get) => ({
       type: input.type ?? existing?.type ?? 'personalizzabile',
       salePrice: input.salePrice ?? existing?.salePrice ?? 0,
       laborCost: input.laborCost ?? existing?.laborCost,
+      photo: input.photo ?? existing?.photo,
       description: input.description ?? existing?.description,
       active: input.active ?? existing?.active ?? true,
       bom: input.bom ?? existing?.bom ?? [],

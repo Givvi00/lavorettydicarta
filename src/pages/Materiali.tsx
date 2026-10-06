@@ -12,9 +12,9 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Boxes, ImagePlus, X, ExternalLink, Package2 } from 'lucide-react';
+import { Boxes, ExternalLink, Package2 } from 'lucide-react';
+import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { formatEUR } from '@/utils/calc';
-import { fileToCompressedDataUrl } from '@/utils/image';
 import type { Material } from '@/types';
 
 export function Materiali() {
@@ -145,21 +145,8 @@ function MaterialForm({
   const [packagePrice, setPackagePrice] = useState(initial?.packagePrice ?? 0);
   const [purchaseUrl, setPurchaseUrl] = useState(initial?.purchaseUrl ?? '');
   const [photo, setPhoto] = useState(initial?.photo ?? '');
-  const [photoBusy, setPhotoBusy] = useState(false);
 
   const costPerUnitFromPackage = packageQty > 0 && packagePrice > 0 ? packagePrice / packageQty : null;
-
-  async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setPhotoBusy(true);
-    try {
-      setPhoto(await fileToCompressedDataUrl(file));
-    } finally {
-      setPhotoBusy(false);
-    }
-  }
 
   return (
     <Modal open={open} onClose={onClose} title={initial ? 'Modifica materiale' : 'Nuovo materiale'}>
@@ -183,33 +170,7 @@ function MaterialForm({
           });
         }}
       >
-        <Field label="Foto">
-          <div className="flex items-center gap-3">
-            {photo ? (
-              <div className="relative">
-                <img src={photo} alt="" className="h-16 w-16 rounded-btn object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setPhoto('')}
-                  aria-label="Rimuovi foto"
-                  className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-lc-danger text-white shadow-soft"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            ) : (
-              <span className="flex h-16 w-16 items-center justify-center rounded-btn border-2 border-dashed border-lc-border text-lc-muted">
-                <ImagePlus size={20} />
-              </span>
-            )}
-            <label>
-              <span className="inline-block cursor-pointer rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-sm font-semibold text-lc-text">
-                {photoBusy ? 'Carico...' : photo ? 'Cambia foto' : 'Scegli foto'}
-              </span>
-              <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
-            </label>
-          </div>
-        </Field>
+        <PhotoPicker value={photo} onChange={setPhoto} />
 
         <Field label="Nome">
           <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
@@ -283,7 +244,11 @@ function MaterialForm({
           </Field>
         </div>
         <Field label="Fornitore">
-          <Input value={supplier} onChange={(e) => setSupplier(e.target.value)} />
+          <Input
+            value={supplier}
+            onChange={(e) => setSupplier(e.target.value)}
+            placeholder="Amazon, Action..."
+          />
         </Field>
         <Field label="Link acquisto (es. Amazon, Cricut store...)">
           <Input

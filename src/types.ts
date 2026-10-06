@@ -56,6 +56,7 @@ export interface Product {
   type: ProductType;
   salePrice: number;
   laborCost?: number; // costo manodopera/tempo stimato per unità
+  photo?: string; // foto di riferimento, data URL
   description?: string;
   active: boolean;
   bom: BomLine[]; // distinta base
