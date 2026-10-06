@@ -5,6 +5,7 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
@@ -122,7 +123,7 @@ export function Badge({
 
 export function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-card border-2 border-dashed border-lc-border py-10 text-center">
+    <div className="col-span-full flex flex-col items-center gap-2 rounded-card border-2 border-dashed border-lc-border py-10 text-center">
       <div className="text-3xl opacity-70">{icon}</div>
       <p className="text-sm text-lc-muted">{text}</p>
     </div>
@@ -141,7 +142,7 @@ export function Modal({
   children: ReactNode;
 }) {
   if (!open) return null;
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-lc-accent-ink/50 backdrop-blur-[2px] sm:items-center"
       onClick={onClose}
@@ -162,6 +163,7 @@ export function Modal({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

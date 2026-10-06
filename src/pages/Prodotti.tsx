@@ -26,15 +26,20 @@ export function Prodotti() {
   const filtered = products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="flex animate-slide-up flex-col gap-4 p-4">
+    <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-semibold">Prodotti</h1>
+        <h1 className="font-display text-xl font-semibold md:text-2xl">Prodotti</h1>
         <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
       </div>
 
-      <Input placeholder="Cerca prodotto..." value={query} onChange={(e) => setQuery(e.target.value)} />
+      <Input
+        className="md:max-w-xs"
+        placeholder="Cerca prodotto..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
 
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 && (
           <EmptyState icon={<Package />} text="Nessun prodotto ancora: crea il primo del tuo catalogo." />
         )}
@@ -64,15 +69,17 @@ export function Prodotti() {
         })}
       </div>
 
-      <ProductForm
-        open={creating}
-        materials={materials}
-        onClose={() => setCreating(false)}
-        onSave={async (data) => {
-          await upsertProduct(data);
-          setCreating(false);
-        }}
-      />
+      {creating && (
+        <ProductForm
+          open={creating}
+          materials={materials}
+          onClose={() => setCreating(false)}
+          onSave={async (data) => {
+            await upsertProduct(data);
+            setCreating(false);
+          }}
+        />
+      )}
 
       {editing && (
         <ProductForm

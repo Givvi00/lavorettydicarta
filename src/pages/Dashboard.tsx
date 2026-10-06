@@ -37,9 +37,9 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="flex animate-slide-up flex-col gap-4 p-4">
+    <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div>
-        <h1 className="font-display text-xl font-semibold">
+        <h1 className="font-display text-xl font-semibold md:text-2xl">
           {greeting()}, {GIRL_NAME}! <span className="inline-block animate-wiggle">✂️</span>
         </h1>
         <p className="text-sm text-lc-muted">Ecco come va il tuo angolo creativo oggi.</p>
@@ -59,46 +59,48 @@ export function Dashboard() {
         ))}
       </div>
 
-      {lowStock.length > 0 && (
-        <Card className="border-lc-danger/30">
-          <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">
-            <AlertTriangle size={16} /> Materiali sotto scorta
-          </p>
-          <ul className="flex flex-col gap-1.5">
-            {lowStock.map((m) => (
-              <li key={m.id} className="flex items-center justify-between text-sm">
-                <span>{m.name}</span>
-                <Badge tone="danger">
-                  {m.stockQty} / min {m.minStock} {m.unit}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      <Card>
-        <p className="mb-2 font-display font-semibold">Ultimi ordini</p>
-        {orders.length === 0 ? (
-          <EmptyState icon={<Scissors />} text="Ancora nessun ordine: creane uno dalla scheda Ordini!" />
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {orders.slice(0, 5).map((o) => {
-              const customer = customers.find((c) => c.id === o.customerId);
-              const initials = (customer?.name ?? '?').slice(0, 1).toUpperCase();
-              return (
-                <li key={o.id} className="flex items-center gap-3 text-sm">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
-                    {initials}
-                  </span>
-                  <span className="flex-1">{customer?.name ?? 'Cliente sconosciuto'}</span>
-                  <span className="font-semibold text-lc-muted">{formatEUR(orderTotal(o))}</span>
+      <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start md:gap-5">
+        {lowStock.length > 0 && (
+          <Card className="border-lc-danger/30">
+            <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">
+              <AlertTriangle size={16} /> Materiali sotto scorta
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {lowStock.map((m) => (
+                <li key={m.id} className="flex items-center justify-between text-sm">
+                  <span>{m.name}</span>
+                  <Badge tone="danger">
+                    {m.stockQty} / min {m.minStock} {m.unit}
+                  </Badge>
                 </li>
-              );
-            })}
-          </ul>
+              ))}
+            </ul>
+          </Card>
         )}
-      </Card>
+
+        <Card>
+          <p className="mb-2 font-display font-semibold">Ultimi ordini</p>
+          {orders.length === 0 ? (
+            <EmptyState icon={<Scissors />} text="Ancora nessun ordine: creane uno dalla scheda Ordini!" />
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {orders.slice(0, 5).map((o) => {
+                const customer = customers.find((c) => c.id === o.customerId);
+                const initials = (customer?.name ?? '?').slice(0, 1).toUpperCase();
+                return (
+                  <li key={o.id} className="flex items-center gap-3 text-sm">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
+                      {initials}
+                    </span>
+                    <span className="flex-1">{customer?.name ?? 'Cliente sconosciuto'}</span>
+                    <span className="font-semibold text-lc-muted">{formatEUR(orderTotal(o))}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+      </div>
 
       <p className="text-center text-xs text-lc-muted">
         {products.length} prodott{products.length === 1 ? 'o' : 'i'} in catalogo · fatto con 🧡 per te

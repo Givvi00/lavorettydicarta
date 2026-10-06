@@ -44,9 +44,9 @@ export function Ordini() {
   const filtered = orders.filter((o) => filter === 'tutti' || o.status === filter);
 
   return (
-    <div className="flex animate-slide-up flex-col gap-4 p-4">
+    <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-semibold">Ordini &amp; preventivi</h1>
+        <h1 className="font-display text-xl font-semibold md:text-2xl">Ordini &amp; preventivi</h1>
         <PrimaryButton onClick={() => setCreating(true)} disabled={customers.length === 0}>
           + Nuovo
         </PrimaryButton>
@@ -55,7 +55,11 @@ export function Ordini() {
         <p className="text-sm text-lc-muted">Aggiungi prima un cliente per creare un ordine.</p>
       )}
 
-      <Select value={filter} onChange={(e) => setFilter(e.target.value as OrderStatus | 'tutti')}>
+      <Select
+        className="md:max-w-xs"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value as OrderStatus | 'tutti')}
+      >
         <option value="tutti">Tutti gli stati</option>
         {Object.entries(STATUS_LABEL).map(([value, label]) => (
           <option key={value} value={value}>
@@ -64,7 +68,7 @@ export function Ordini() {
         ))}
       </Select>
 
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 && (
           <EmptyState icon={<ClipboardList />} text="Nessun ordine qui: creane uno con “+ Nuovo”." />
         )}
@@ -88,16 +92,18 @@ export function Ordini() {
         })}
       </div>
 
-      <OrderForm
-        open={creating}
-        customers={customers}
-        products={products}
-        onClose={() => setCreating(false)}
-        onSave={async (data) => {
-          await upsertOrder(data);
-          setCreating(false);
-        }}
-      />
+      {creating && (
+        <OrderForm
+          open={creating}
+          customers={customers}
+          products={products}
+          onClose={() => setCreating(false)}
+          onSave={async (data) => {
+            await upsertOrder(data);
+            setCreating(false);
+          }}
+        />
+      )}
 
       {editing && (
         <OrderForm

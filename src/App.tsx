@@ -37,47 +37,81 @@ function App() {
   }
 
   return (
-    <div className="mx-auto flex h-dvh max-w-2xl flex-col bg-lc-bg">
-      <header className="relative overflow-hidden border-b-2 border-lc-border bg-lc-accent px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))]">
-        <div className="lc-paper-bg pointer-events-none absolute inset-0 opacity-40" />
-        <div className="relative flex items-center gap-3">
-          <img src={logo} alt="Lavoretty di Carta" className="h-11 w-11 rounded-2xl shadow-soft" />
-          <div>
-            <h1 className="font-display text-lg font-semibold leading-tight text-lc-accent-ink">
-              Lavoretty di Carta
-            </h1>
-            <p className="text-xs font-semibold text-lc-accent-ink/70">il tuo angolo creativo ✂️✨</p>
+    <div className="flex h-dvh flex-col bg-lc-bg md:flex-row">
+      {/* Sidebar: solo da tablet/desktop in su */}
+      <aside className="hidden w-60 shrink-0 flex-col border-r-2 border-lc-border bg-lc-surface md:flex">
+        <div className="flex items-center gap-2.5 border-b-2 border-lc-border px-4 py-4">
+          <img src={logo} alt="Lavoretty di Carta" className="h-10 w-10 rounded-2xl shadow-soft" />
+          <div className="leading-tight">
+            <p className="font-display text-sm font-semibold">Lavoretty di Carta</p>
+            <p className="text-[11px] font-semibold text-lc-muted">angolo creativo ✂️</p>
           </div>
         </div>
-      </header>
+        <nav className="flex flex-1 flex-col gap-1 p-3">
+          {TABS.map(({ id, label, icon: Icon }) => {
+            const active = tab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold transition-colors ${
+                  active ? 'bg-lc-accent/30 text-lc-olive' : 'text-lc-muted hover:bg-lc-border/30 hover:text-lc-text'
+                }`}
+              >
+                <Icon size={19} strokeWidth={active ? 2.5 : 2} />
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
 
-      <main className="flex-1 overflow-y-auto pb-24">
-        <Suspense fallback={<div className="p-4 text-lc-muted">Caricamento...</div>}>
-          {tab === 'dashboard' && <Dashboard />}
-          {tab === 'clienti' && <Clienti />}
-          {tab === 'materiali' && <Materiali />}
-          {tab === 'prodotti' && <Prodotti />}
-          {tab === 'ordini' && <Ordini />}
-        </Suspense>
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Header: solo su mobile, la sidebar lo sostituisce da md in su */}
+        <header className="relative overflow-hidden border-b-2 border-lc-border bg-lc-accent px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))] md:hidden">
+          <div className="lc-paper-bg pointer-events-none absolute inset-0 opacity-40" />
+          <div className="relative flex items-center gap-3">
+            <img src={logo} alt="Lavoretty di Carta" className="h-11 w-11 rounded-2xl shadow-soft" />
+            <div>
+              <h1 className="font-display text-lg font-semibold leading-tight text-lc-accent-ink">
+                Lavoretty di Carta
+              </h1>
+              <p className="text-xs font-semibold text-lc-accent-ink/70">il tuo angolo creativo ✂️✨</p>
+            </div>
+          </div>
+        </header>
 
-      <nav className="fixed bottom-0 left-1/2 flex w-full max-w-2xl -translate-x-1/2 gap-1 border-t-2 border-lc-border bg-lc-surface px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2">
-        {TABS.map(({ id, label, icon: Icon }) => {
-          const active = tab === id;
-          return (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`flex flex-1 flex-col items-center gap-0.5 rounded-btn py-1.5 text-[11px] font-bold transition-colors ${
-                active ? 'bg-lc-accent/30 text-lc-olive' : 'text-lc-muted'
-              }`}
-            >
-              <Icon size={20} strokeWidth={active ? 2.5 : 2} />
-              {label}
-            </button>
-          );
-        })}
-      </nav>
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-6">
+          <div className="mx-auto w-full max-w-6xl">
+            <Suspense fallback={<div className="p-4 text-lc-muted">Caricamento...</div>}>
+              {tab === 'dashboard' && <Dashboard />}
+              {tab === 'clienti' && <Clienti />}
+              {tab === 'materiali' && <Materiali />}
+              {tab === 'prodotti' && <Prodotti />}
+              {tab === 'ordini' && <Ordini />}
+            </Suspense>
+          </div>
+        </main>
+
+        {/* Tab bar: solo su mobile */}
+        <nav className="fixed bottom-0 left-0 flex w-full gap-1 border-t-2 border-lc-border bg-lc-surface px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 md:hidden">
+          {TABS.map(({ id, label, icon: Icon }) => {
+            const active = tab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex flex-1 flex-col items-center gap-0.5 rounded-btn py-1.5 text-[11px] font-bold transition-colors ${
+                  active ? 'bg-lc-accent/30 text-lc-olive' : 'text-lc-muted'
+                }`}
+              >
+                <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }
