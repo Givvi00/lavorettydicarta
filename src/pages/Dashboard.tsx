@@ -1,6 +1,17 @@
+import { ClipboardList, FileClock, Euro, Users2, AlertTriangle, Scissors } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { Card, Badge } from '@/components/ui/primitives';
+import { Card, Badge, EmptyState } from '@/components/ui/primitives';
 import { formatEUR, orderTotal } from '@/utils/calc';
+
+const GIRL_NAME = 'Paola';
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 6) return 'Buonanotte';
+  if (h < 12) return 'Buongiorno';
+  if (h < 18) return 'Buon pomeriggio';
+  return 'Buonasera';
+}
 
 export function Dashboard() {
   const { orders, materials, customers, products } = useStore();
@@ -18,33 +29,42 @@ export function Dashboard() {
     })
     .reduce((sum, o) => sum + orderTotal(o), 0);
 
+  const stats = [
+    { label: 'Ordini attivi', value: activeOrders.length, icon: ClipboardList, tone: 'bg-lc-accent/25 text-lc-olive' },
+    { label: 'Preventivi', value: quotes.length, icon: FileClock, tone: 'bg-lc-pink/20 text-lc-pink' },
+    { label: 'Incasso mese', value: formatEUR(revenueThisMonth), icon: Euro, tone: 'bg-lc-success/15 text-lc-success' },
+    { label: 'Clienti', value: customers.length, icon: Users2, tone: 'bg-lc-border/60 text-lc-text' },
+  ];
+
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h1 className="text-xl font-semibold">Dashboard</h1>
+    <div className="flex animate-slide-up flex-col gap-4 p-4">
+      <div>
+        <h1 className="font-display text-xl font-semibold">
+          {greeting()}, {GIRL_NAME}! <span className="inline-block animate-wiggle">✂️</span>
+        </h1>
+        <p className="text-sm text-lc-muted">Ecco come va il tuo angolo creativo oggi.</p>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card>
-          <p className="text-sm text-lc-muted">Ordini attivi</p>
-          <p className="text-2xl font-semibold">{activeOrders.length}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-lc-muted">Preventivi in sospeso</p>
-          <p className="text-2xl font-semibold">{quotes.length}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-lc-muted">Incasso mese</p>
-          <p className="text-2xl font-semibold">{formatEUR(revenueThisMonth)}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-lc-muted">Clienti</p>
-          <p className="text-2xl font-semibold">{customers.length}</p>
-        </Card>
+        {stats.map(({ label, value, icon: Icon, tone }) => (
+          <Card key={label} className="flex flex-col gap-2">
+            <span className={`flex h-8 w-8 items-center justify-center rounded-full ${tone}`}>
+              <Icon size={16} />
+            </span>
+            <div>
+              <p className="text-xs font-semibold text-lc-muted">{label}</p>
+              <p className="font-display text-xl font-semibold">{value}</p>
+            </div>
+          </Card>
+        ))}
       </div>
 
       {lowStock.length > 0 && (
-        <Card>
-          <p className="mb-2 font-medium">Materiali sotto scorta</p>
-          <ul className="flex flex-col gap-1">
+        <Card className="border-lc-danger/30">
+          <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">
+            <AlertTriangle size={16} /> Materiali sotto scorta
+          </p>
+          <ul className="flex flex-col gap-1.5">
             {lowStock.map((m) => (
               <li key={m.id} className="flex items-center justify-between text-sm">
                 <span>{m.name}</span>
@@ -58,22 +78,31 @@ export function Dashboard() {
       )}
 
       <Card>
-        <p className="mb-2 font-medium">Ultimi ordini</p>
-        {orders.length === 0 && <p className="text-sm text-lc-muted">Nessun ordine ancora.</p>}
-        <ul className="flex flex-col gap-2">
-          {orders.slice(0, 5).map((o) => {
-            const customer = customers.find((c) => c.id === o.customerId);
-            return (
-              <li key={o.id} className="flex items-center justify-between text-sm">
-                <span>{customer?.name ?? 'Cliente sconosciuto'}</span>
-                <span className="text-lc-muted">{formatEUR(orderTotal(o))}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <p className="mb-2 font-display font-semibold">Ultimi ordini</p>
+        {orders.length === 0 ? (
+          <EmptyState icon={<Scissors />} text="Ancora nessun ordine: creane uno dalla scheda Ordini!" />
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {orders.slice(0, 5).map((o) => {
+              const customer = customers.find((c) => c.id === o.customerId);
+              const initials = (customer?.name ?? '?').slice(0, 1).toUpperCase();
+              return (
+                <li key={o.id} className="flex items-center gap-3 text-sm">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
+                    {initials}
+                  </span>
+                  <span className="flex-1">{customer?.name ?? 'Cliente sconosciuto'}</span>
+                  <span className="font-semibold text-lc-muted">{formatEUR(orderTotal(o))}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </Card>
 
-      <p className="text-xs text-lc-muted">{products.length} prodotti in catalogo</p>
+      <p className="text-center text-xs text-lc-muted">
+        {products.length} prodott{products.length === 1 ? 'o' : 'i'} in catalogo · fatto con 🧡 per te
+      </p>
     </div>
   );
 }

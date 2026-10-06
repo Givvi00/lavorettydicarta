@@ -1,0 +1,13 @@
+{
+  "name": "Lavoretty di Carta",
+  "short_name": "Lavoretty",
+  "description": "Gestionale per clienti, ordini e materiali di Lavoretty di Carta",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFBF0",
+  "theme_color": "#F6C945",
+  "icons": [
+    { "src": "/logo.png", "sizes": "1092x1092", "type": "image/png", "purpose": "any" },
+    { "src": "/logo.png", "sizes": "1092x1092", "type": "image/png", "purpose": "maskable" }
+  ]
+}

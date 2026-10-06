@@ -3,29 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --lc-bg: 250 249 246;
+  /* Brand: giallo Lavoretty di Carta */
+  --lc-bg: 255 251 240;
   --lc-surface: 255 255 255;
   --lc-card: 255 255 255;
-  --lc-border: 229 224 219;
-  --lc-text: 41 37 36;
-  --lc-muted: 120 113 108;
-  --lc-accent: 217 119 87;
-  --lc-accent-text: 255 255 255;
-  --lc-danger: 220 38 38;
-  --lc-success: 22 163 74;
+  --lc-border: 240 225 185;
+  --lc-text: 58 46 18;
+  --lc-muted: 143 126 90;
+  --lc-accent: 246 201 69;
+  --lc-accent-text: 58 46 18;
+  --lc-accent-ink: 58 46 18;
+  --lc-olive: 138 119 20;
+  --lc-pink: 240 163 188;
+  --lc-danger: 214 69 69;
+  --lc-success: 95 155 95;
 }
 
 :root.dark {
-  --lc-bg: 23 21 20;
-  --lc-surface: 32 29 28;
-  --lc-card: 38 35 33;
-  --lc-border: 56 51 48;
-  --lc-text: 243 241 239;
-  --lc-muted: 168 160 154;
-  --lc-accent: 237 142 108;
-  --lc-accent-text: 23 21 20;
-  --lc-danger: 248 113 113;
-  --lc-success: 74 222 128;
+  --lc-bg: 28 24 16;
+  --lc-surface: 38 32 21;
+  --lc-card: 45 38 25;
+  --lc-border: 64 54 34;
+  --lc-text: 248 240 222;
+  --lc-muted: 181 165 134;
+  --lc-accent: 246 201 69;
+  --lc-accent-text: 35 28 12;
+  --lc-accent-ink: 20 16 6;
+  --lc-olive: 212 188 103;
+  --lc-pink: 224 150 177;
+  --lc-danger: 240 118 118;
+  --lc-success: 134 196 134;
 }
 
 html,
@@ -38,6 +45,17 @@ body {
   margin: 0;
   background: rgb(var(--lc-bg));
   color: rgb(var(--lc-text));
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Nunito', system-ui, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+.font-display {
+  font-family: 'Fredoka', system-ui, sans-serif;
+}
+
+/* sfondo a puntini leggero, texture "carta" */
+.lc-paper-bg {
+  background-image: radial-gradient(rgb(var(--lc-accent-ink) / 0.06) 1px, transparent 1px);
+  background-size: 18px 18px;
 }

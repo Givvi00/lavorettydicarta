@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Users2 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { Card, PrimaryButton, SecondaryButton, DangerButton, Modal, Field, Input, Textarea } from '@/components/ui/primitives';
+import { Card, PrimaryButton, SecondaryButton, DangerButton, Modal, Field, Input, Textarea, EmptyState } from '@/components/ui/primitives';
 import type { Customer } from '@/types';
 
 export function Clienti() {
@@ -12,23 +13,30 @@ export function Clienti() {
   const filtered = customers.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex animate-slide-up flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Clienti</h1>
+        <h1 className="font-display text-xl font-semibold">Clienti</h1>
         <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
       </div>
 
       <Input placeholder="Cerca cliente..." value={query} onChange={(e) => setQuery(e.target.value)} />
 
       <div className="flex flex-col gap-2">
-        {filtered.length === 0 && <p className="text-sm text-lc-muted">Nessun cliente trovato.</p>}
+        {filtered.length === 0 && (
+          <EmptyState icon={<Users2 />} text="Nessun cliente ancora: aggiungi il primo con “+ Nuovo”." />
+        )}
         {filtered.map((c) => (
-          <Card key={c.id} className="flex cursor-pointer items-center justify-between" >
-            <div onClick={() => setEditing(c)} className="flex-1 text-left">
-              <p className="font-medium">{c.name}</p>
-              <p className="text-sm text-lc-muted">
-                {[c.phone, c.email].filter(Boolean).join(' · ') || 'Nessun contatto'}
-              </p>
+          <Card key={c.id} className="flex cursor-pointer items-center justify-between">
+            <div onClick={() => setEditing(c)} className="flex flex-1 items-center gap-3 text-left">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
+                {c.name.slice(0, 1).toUpperCase()}
+              </span>
+              <div>
+                <p className="font-semibold">{c.name}</p>
+                <p className="text-sm text-lc-muted">
+                  {[c.phone, c.email].filter(Boolean).join(' · ') || 'Nessun contatto'}
+                </p>
+              </div>
             </div>
             <SecondaryButton onClick={() => setEditing(c)}>Modifica</SecondaryButton>
           </Card>

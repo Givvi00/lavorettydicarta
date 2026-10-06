@@ -11,7 +11,9 @@ import {
   Textarea,
   Select,
   Badge,
+  EmptyState,
 } from '@/components/ui/primitives';
+import { ClipboardList } from 'lucide-react';
 import { formatEUR, orderSubtotal, orderTotal, newId } from '@/utils/calc';
 import type { Order, OrderItem, OrderStatus } from '@/types';
 
@@ -42,9 +44,9 @@ export function Ordini() {
   const filtered = orders.filter((o) => filter === 'tutti' || o.status === filter);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex animate-slide-up flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Ordini &amp; preventivi</h1>
+        <h1 className="font-display text-xl font-semibold">Ordini &amp; preventivi</h1>
         <PrimaryButton onClick={() => setCreating(true)} disabled={customers.length === 0}>
           + Nuovo
         </PrimaryButton>
@@ -63,14 +65,16 @@ export function Ordini() {
       </Select>
 
       <div className="flex flex-col gap-2">
-        {filtered.length === 0 && <p className="text-sm text-lc-muted">Nessun ordine trovato.</p>}
+        {filtered.length === 0 && (
+          <EmptyState icon={<ClipboardList />} text="Nessun ordine qui: creane uno con “+ Nuovo”." />
+        )}
         {filtered.map((o) => {
           const customer = customers.find((c) => c.id === o.customerId);
           return (
             <Card key={o.id} className="flex items-center justify-between">
               <div onClick={() => setEditing(o)} className="flex-1 cursor-pointer text-left">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">{customer?.name ?? 'Cliente sconosciuto'}</p>
+                  <p className="font-semibold">{customer?.name ?? 'Cliente sconosciuto'}</p>
                   <Badge tone={STATUS_TONE[o.status]}>{STATUS_LABEL[o.status]}</Badge>
                 </div>
                 <p className="text-sm text-lc-muted">

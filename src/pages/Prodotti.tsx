@@ -11,7 +11,9 @@ import {
   Textarea,
   Select,
   Badge,
+  EmptyState,
 } from '@/components/ui/primitives';
+import { Package } from 'lucide-react';
 import { formatEUR, totalCostOf, marginOf } from '@/utils/calc';
 import type { BomLine, Product, ProductType } from '@/types';
 
@@ -24,16 +26,18 @@ export function Prodotti() {
   const filtered = products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex animate-slide-up flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Prodotti</h1>
+        <h1 className="font-display text-xl font-semibold">Prodotti</h1>
         <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
       </div>
 
       <Input placeholder="Cerca prodotto..." value={query} onChange={(e) => setQuery(e.target.value)} />
 
       <div className="flex flex-col gap-2">
-        {filtered.length === 0 && <p className="text-sm text-lc-muted">Nessun prodotto trovato.</p>}
+        {filtered.length === 0 && (
+          <EmptyState icon={<Package />} text="Nessun prodotto ancora: crea il primo del tuo catalogo." />
+        )}
         {filtered.map((p) => {
           const cost = totalCostOf(p, materials);
           const margin = marginOf(p, materials);
@@ -41,7 +45,7 @@ export function Prodotti() {
             <Card key={p.id} className="flex items-center justify-between">
               <div onClick={() => setEditing(p)} className="flex-1 cursor-pointer text-left">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">{p.name}</p>
+                  <p className="font-semibold">{p.name}</p>
                   <Badge tone={p.type === 'pronto' ? 'default' : 'accent'}>
                     {p.type === 'pronto' ? 'pronto' : 'personalizzabile'}
                   </Badge>

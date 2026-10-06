@@ -10,7 +10,9 @@ import {
   Input,
   Textarea,
   Badge,
+  EmptyState,
 } from '@/components/ui/primitives';
+import { Boxes } from 'lucide-react';
 import { formatEUR } from '@/utils/calc';
 import type { Material } from '@/types';
 
@@ -23,23 +25,25 @@ export function Materiali() {
   const filtered = materials.filter((m) => m.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex animate-slide-up flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Materiali</h1>
+        <h1 className="font-display text-xl font-semibold">Materiali</h1>
         <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
       </div>
 
       <Input placeholder="Cerca materiale..." value={query} onChange={(e) => setQuery(e.target.value)} />
 
       <div className="flex flex-col gap-2">
-        {filtered.length === 0 && <p className="text-sm text-lc-muted">Nessun materiale trovato.</p>}
+        {filtered.length === 0 && (
+          <EmptyState icon={<Boxes />} text="Il magazzino è vuoto: aggiungi il primo materiale." />
+        )}
         {filtered.map((m) => {
           const low = m.minStock != null && m.stockQty <= m.minStock;
           return (
             <Card key={m.id} className="flex items-center justify-between">
               <div onClick={() => setEditing(m)} className="flex-1 cursor-pointer text-left">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">{m.name}</p>
+                  <p className="font-semibold">{m.name}</p>
                   {low && <Badge tone="danger">scorta bassa</Badge>}
                 </div>
                 <p className="text-sm text-lc-muted">
