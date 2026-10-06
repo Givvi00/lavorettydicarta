@@ -14,6 +14,7 @@ import {
   EmptyState,
 } from '@/components/ui/primitives';
 import { ClipboardList } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
 import { formatEUR, orderSubtotal, orderTotal, newId } from '@/utils/calc';
 import type { Order, OrderItem, OrderStatus } from '@/types';
 
@@ -151,9 +152,12 @@ function OrderForm({
     initial?.deliveryDate ? new Date(initial.deliveryDate).toISOString().slice(0, 10) : ''
   );
   const [notes, setNotes] = useState(initial?.notes ?? '');
+  const { rates } = useSettings();
 
   const subtotal = orderSubtotal({ items });
   const total = orderTotal({ items, discount });
+  const designHoursTotal = items.reduce((sum, it) => sum + (it.designHours ?? 0), 0);
+  const designCostTotal = designHoursTotal * rates.designRate;
 
   function addItem() {
     if (products.length === 0) return;
@@ -274,6 +278,14 @@ function OrderForm({
                     onChange={(e) => updateItem(i, { customization: e.target.value })}
                   />
                 </Field>
+                <Field label="Ore di design su misura per questo ordine (opzionale)">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={item.designHours ?? 0}
+                    onChange={(e) => updateItem(i, { designHours: parseFloat(e.target.value) || 0 })}
+                  />
+                </Field>
               </div>
             ))}
           </div>
@@ -297,6 +309,14 @@ function OrderForm({
             <span>Totale</span>
             <span>{formatEUR(total)}</span>
           </div>
+          {designHoursTotal > 0 && (
+            <div className="flex justify-between border-t border-lc-border pt-1 text-xs text-lc-muted">
+              <span>Costo design su misura (informativo, non incluso nel totale)</span>
+              <span>
+                {designHoursTotal}h · {formatEUR(designCostTotal)}
+              </span>
+            </div>
+          )}
         </Card>
 
         <Field label="Note">

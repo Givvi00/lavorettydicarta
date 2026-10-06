@@ -56,6 +56,8 @@ export interface Product {
   type: ProductType;
   salePrice: number;
   laborCost?: number; // costo manodopera/tempo stimato per unità
+  productionHours?: number; // ore di produzione/assemblaggio per 1 pezzo
+  designHours?: number; // ore di progettazione del template, una tantum (non per pezzo)
   photo?: string; // foto di riferimento, data URL
   description?: string;
   active: boolean;
@@ -71,6 +73,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   customization?: string;
+  designHours?: number; // ore di progettazione su misura per questo ordine (grafica custom)
 }
 
 export interface Order {

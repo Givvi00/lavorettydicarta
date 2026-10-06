@@ -13,8 +13,9 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Package, Tags, Trash2 } from 'lucide-react';
+import { Package, Tags, Trash2, Clock } from 'lucide-react';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
+import { useSettings } from '@/hooks/useSettings';
 import { formatEUR, totalCostOf, marginOf } from '@/utils/calc';
 import type { BomLine, Category, Product, ProductType } from '@/types';
 
@@ -265,10 +266,13 @@ function ProductForm({
   const [type, setType] = useState<ProductType>(initial?.type ?? 'personalizzabile');
   const [salePrice, setSalePrice] = useState(initial?.salePrice ?? 0);
   const [laborCost, setLaborCost] = useState(initial?.laborCost ?? 0);
+  const [productionHours, setProductionHours] = useState(initial?.productionHours ?? 0);
+  const [designHours, setDesignHours] = useState(initial?.designHours ?? 0);
   const [description, setDescription] = useState(initial?.description ?? '');
   const [active, setActive] = useState(initial?.active ?? true);
   const [bom, setBom] = useState<BomLine[]>(initial?.bom ?? []);
   const [photo, setPhoto] = useState(initial?.photo ?? '');
+  const { rates } = useSettings();
 
   const materialCost = bom.reduce((sum, line) => {
     const mat = materials.find((m) => m.id === line.materialId);
@@ -277,6 +281,8 @@ function ProductForm({
   const totalCost = materialCost + (laborCost || 0);
   const margin = salePrice - totalCost;
   const marginPct = salePrice > 0 ? (margin / salePrice) * 100 : 0;
+  const productionCostFromHours = productionHours > 0 ? productionHours * rates.productionRate : null;
+  const designCostOneTime = designHours > 0 ? designHours * rates.designRate : null;
 
   function addBomLine() {
     if (materials.length === 0) return;
@@ -310,7 +316,19 @@ function ProductForm({
         onSubmit={(e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          onSave({ name: name.trim(), category, type, salePrice, laborCost, description, active, bom, photo });
+          onSave({
+            name: name.trim(),
+            category,
+            type,
+            salePrice,
+            laborCost,
+            productionHours: productionHours || undefined,
+            designHours: designHours || undefined,
+            description,
+            active,
+            bom,
+            photo,
+          });
         }}
       >
         <PhotoPicker value={photo} onChange={setPhoto} />
@@ -385,6 +403,49 @@ function ProductForm({
             />
           </Field>
         </div>
+
+        <Card className="flex flex-col gap-2 bg-lc-bg">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-lc-muted">
+            <Clock size={15} /> Tempo di lavoro (opzionale)
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Ore produzione per pezzo">
+              <Input
+                type="number"
+                step="0.1"
+                value={productionHours}
+                onChange={(e) => setProductionHours(parseFloat(e.target.value) || 0)}
+              />
+            </Field>
+            <Field label="Ore progettazione (una tantum)">
+              <Input
+                type="number"
+                step="0.1"
+                value={designHours}
+                onChange={(e) => setDesignHours(parseFloat(e.target.value) || 0)}
+              />
+            </Field>
+          </div>
+          {productionCostFromHours != null && (
+            <p className="text-sm text-lc-muted">
+              Costo manodopera per pezzo: <strong>{formatEUR(productionCostFromHours)}</strong>{' '}
+              <button
+                type="button"
+                onClick={() => setLaborCost(Math.round(productionCostFromHours * 100) / 100)}
+                className="font-semibold text-lc-olive underline"
+              >
+                usa questo costo
+              </button>
+            </p>
+          )}
+          {designCostOneTime != null && (
+            <p className="text-sm text-lc-muted">
+              Costo progettazione template (una tantum, non per pezzo):{' '}
+              <strong>{formatEUR(designCostOneTime)}</strong> — da riguadagnare sulle prime vendite,
+              non incide sul margine per pezzo qui sotto.
+            </p>
+          )}
+        </Card>
 
         <div>
           <div className="mb-2 flex items-center justify-between">

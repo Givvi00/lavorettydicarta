@@ -1,7 +1,8 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { LayoutDashboard, Users, Boxes, Package, ClipboardList, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Users, Boxes, Package, ClipboardList, Sun, Moon, Settings } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useTheme } from '@/hooks/useTheme';
+import { SettingsModal } from '@/components/SettingsModal';
 import { Dashboard } from '@/pages/Dashboard';
 import { Clienti } from '@/pages/Clienti';
 import { Materiali } from '@/pages/Materiali';
@@ -22,6 +23,7 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
 
 function App() {
   const [tab, setTab] = useState<Tab>('dashboard');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { ready, load } = useStore();
   const { theme, toggleTheme } = useTheme();
 
@@ -66,7 +68,14 @@ function App() {
             );
           })}
         </nav>
-        <div className="border-t-2 border-lc-border p-3">
+        <div className="flex flex-col gap-1 border-t-2 border-lc-border p-3">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold text-lc-muted transition-colors hover:bg-lc-border/30 hover:text-lc-text"
+          >
+            <Settings size={19} />
+            Tariffe orarie
+          </button>
           <button
             onClick={toggleTheme}
             className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold text-lc-muted transition-colors hover:bg-lc-border/30 hover:text-lc-text"
@@ -89,6 +98,13 @@ function App() {
               </h1>
               <p className="text-xs font-semibold text-lc-accent-ink/70">il tuo angolo creativo ✂️✨</p>
             </div>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Tariffe orarie"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 text-lc-accent-ink transition-transform active:scale-90"
+            >
+              <Settings size={17} />
+            </button>
             <button
               onClick={toggleTheme}
               aria-label="Cambia tema"
@@ -130,6 +146,8 @@ function App() {
           })}
         </nav>
       </div>
+
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
