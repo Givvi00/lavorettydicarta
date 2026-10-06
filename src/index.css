@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --lc-bg: 250 249 246;
+  --lc-surface: 255 255 255;
+  --lc-card: 255 255 255;
+  --lc-border: 229 224 219;
+  --lc-text: 41 37 36;
+  --lc-muted: 120 113 108;
+  --lc-accent: 217 119 87;
+  --lc-accent-text: 255 255 255;
+  --lc-danger: 220 38 38;
+  --lc-success: 22 163 74;
+}
+
+:root.dark {
+  --lc-bg: 23 21 20;
+  --lc-surface: 32 29 28;
+  --lc-card: 38 35 33;
+  --lc-border: 56 51 48;
+  --lc-text: 243 241 239;
+  --lc-muted: 168 160 154;
+  --lc-accent: 237 142 108;
+  --lc-accent-text: 23 21 20;
+  --lc-danger: 248 113 113;
+  --lc-success: 74 222 128;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: rgb(var(--lc-bg));
+  color: rgb(var(--lc-text));
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
