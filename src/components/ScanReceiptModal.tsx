@@ -116,7 +116,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
       {step === 'loading' && (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <Loader2 size={32} className="animate-spin text-lc-accent" />
-          <p className="text-sm text-lc-muted">Leggo lo scontrino...</p>
+          <p className="text-sm text-lc-muted">Leggo lo scontrino... può richiedere qualche secondo.</p>
         </div>
       )}
 
