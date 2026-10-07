@@ -41,6 +41,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
   const [step, setStep] = useState<'pick' | 'loading' | 'review' | 'error'>('pick');
   const [error, setError] = useState('');
   const [rows, setRows] = useState<ReviewRow[]>([]);
+  const [supplier, setSupplier] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [creatingForRow, setCreatingForRow] = useState<number | null>(null);
 
@@ -51,7 +52,8 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
 
     setStep('loading');
     try {
-      const lines = await readReceipt(file);
+      const { supplier: detectedSupplier, lines } = await readReceipt(file);
+      setSupplier(detectedSupplier);
       if (lines.length === 0) {
         setError('Non ho trovato nessun articolo leggibile su questo scontrino.');
         setStep('error');
@@ -101,6 +103,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
   function reset() {
     setStep('pick');
     setRows([]);
+    setSupplier(undefined);
     setError('');
   }
 
@@ -242,6 +245,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
                 unit: 'pz',
                 unitCost: rows[creatingForRow].line.unitPrice ?? 0,
                 stockQty: rows[creatingForRow].quantity,
+                supplier,
                 notes: rows[creatingForRow].line.brand ? `Marca: ${rows[creatingForRow].line.brand}` : undefined,
               }}
               onClose={() => setCreatingForRow(null)}

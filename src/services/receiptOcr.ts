@@ -9,6 +9,11 @@ export interface ReceiptLine {
   unitPrice?: number;
 }
 
+export interface ReceiptResult {
+  supplier?: string; // negozio in cui è stato fatto l'acquisto (es. "Action"), letto dall'intestazione
+  lines: ReceiptLine[];
+}
+
 // Modello di solo testo (non visione) ospitato su Groq, gratuito. Il tuo account Groq non ha
 // accesso a modelli con visione, quindi il testo viene letto prima con Tesseract (OCR locale,
 // gira nel browser) e solo il testo viene poi interpretato dall'AI.
@@ -26,9 +31,12 @@ per chi gestisce un magazzino di cartoleria/hobbistica: includi quando riconosci
 formato o dimensione e tipo di materiale (es. da "CARTA A4 80G BIA" scrivi "Cartoncino bianco A4 80g", da
 "PENNARELLI 12PZ ASS" scrivi "Pennarelli colorati set da 12"). Se riconosci una marca/brand (es. Fabriano,
 Canson, Cricut, Stabilo...) mettila SOLO nel campo separato "brand", non ripeterla nel "name".
-Ignora intestazione negozio, righe di totale, sconto, IVA, resto, metodo di pagamento, scontrino fiscale.
-Rispondi SOLO con un array JSON valido, senza markdown, senza testo prima o dopo, in questo formato esatto:
-[{"rawText": "testo originale della riga", "name": "nome chiaro e descrittivo", "brand": "marca_o_null", "quantity": numero, "unitPrice": numero_o_null}]`;
+Ignora righe di totale, sconto, IVA, resto, metodo di pagamento, scontrino fiscale.
+Nell'intestazione in alto cerca anche il nome del negozio/fornitore presso cui è stato fatto l'acquisto
+(es. "Action", "Amazon", "Leroy Merlin"): metti il nome del negozio, pulito e senza indirizzo o altri dati,
+nel campo "supplier" (null se non riconoscibile).
+Rispondi SOLO con un oggetto JSON valido, senza markdown, senza testo prima o dopo, in questo formato esatto:
+{"supplier": "nome_negozio_o_null", "items": [{"rawText": "testo originale della riga", "name": "nome chiaro e descrittivo", "brand": "marca_o_null", "quantity": numero, "unitPrice": numero_o_null}]}`;
 }
 
 async function ocrText(file: File): Promise<string> {
@@ -43,14 +51,14 @@ async function ocrText(file: File): Promise<string> {
   }
 }
 
-/** Estrae il primo array JSON presente nel testo, anche se circondato da ```json o altro testo */
-function extractJsonArray(text: string): unknown {
-  const match = text.match(/\[[\s\S]*\]/);
+/** Estrae il primo oggetto JSON presente nel testo, anche se circondato da ```json o altro testo */
+function extractJsonObject(text: string): unknown {
+  const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('Risposta non leggibile: prova con una foto più nitida.');
   return JSON.parse(match[0]);
 }
 
-export async function readReceipt(file: File): Promise<ReceiptLine[]> {
+export async function readReceipt(file: File): Promise<ReceiptResult> {
   const apiKey = await getSecret('groq_api_key');
   if (!apiKey) throw new Error('Scanner non configurato: avvisa chi gestisce il sito.');
 
@@ -87,14 +95,20 @@ export async function readReceipt(file: File): Promise<ReceiptLine[]> {
 
   let parsed: unknown;
   try {
-    parsed = extractJsonArray(content);
+    parsed = extractJsonObject(content);
   } catch {
     throw new Error('Risposta non leggibile: prova con una foto più nitida.');
   }
 
-  if (!Array.isArray(parsed)) throw new Error('Nessun articolo riconosciuto sullo scontrino.');
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error('Nessun articolo riconosciuto sullo scontrino.');
+  }
+  const obj = parsed as Record<string, unknown>;
+  const items = Array.isArray(obj.items) ? obj.items : [];
+  const supplier =
+    obj.supplier && String(obj.supplier).trim() ? String(obj.supplier).trim() : undefined;
 
-  return parsed
+  const lines = items
     .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
     .map((item) => ({
       rawText: String(item.rawText ?? ''),
@@ -104,4 +118,6 @@ export async function readReceipt(file: File): Promise<ReceiptLine[]> {
       unitPrice: item.unitPrice != null ? Number(item.unitPrice) || undefined : undefined,
     }))
     .filter((item) => item.name.trim().length > 0);
+
+  return { supplier, lines };
 }
