@@ -7,9 +7,10 @@ export interface ReceiptLine {
   unitPrice?: number;
 }
 
-// Alias che punta sempre al modello Flash stabile più recente: evita di dover aggiornare
-// a mano il codice ogni volta che Google rilascia/dismette una versione (es. 2.0 -> 3.x).
-const MODEL = 'gemini-flash-latest';
+// "gemini-flash-latest" punterebbe ai modelli 3.x, che Google richiede a pagamento (errore 402
+// "credito prepagato esaurito" anche con fatturazione mai attivata). La serie 2.5 resta invece
+// gratuita con supporto immagini, quindi la usiamo esplicitamente.
+const MODEL = 'gemini-2.5-flash';
 
 const PROMPT = `Questo è uno scontrino di un negozio (es. Action, Amazon, cartoleria). Estrai ogni riga di prodotto acquistato.
 Per ogni riga capisci cosa potrebbe essere l'oggetto reale anche se sullo scontrino è scritto in modo abbreviato
