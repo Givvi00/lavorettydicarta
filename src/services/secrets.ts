@@ -2,8 +2,8 @@
 // così restano fuori dal repository pubblico. Leggibili solo da chi ha già fatto login.
 import { getClient } from './account';
 
-let cached: string | null = null;
-let pending: Promise<string | null> | null = null;
+const cache = new Map<string, string | null>();
+const pending = new Map<string, Promise<string | null>>();
 
 async function fetchValue(key: string): Promise<string | null> {
   try {
@@ -16,12 +16,17 @@ async function fetchValue(key: string): Promise<string | null> {
   }
 }
 
-export function getGeminiKey(): Promise<string | null> {
-  if (cached) return Promise.resolve(cached);
-  pending ??= fetchValue('gemini_api_key').then((value) => {
-    cached = value;
-    pending = null;
-    return value;
-  });
-  return pending;
+export function getSecret(key: string): Promise<string | null> {
+  if (cache.has(key)) return Promise.resolve(cache.get(key) ?? null);
+  if (!pending.has(key)) {
+    pending.set(
+      key,
+      fetchValue(key).then((value) => {
+        cache.set(key, value);
+        pending.delete(key);
+        return value;
+      })
+    );
+  }
+  return pending.get(key)!;
 }
