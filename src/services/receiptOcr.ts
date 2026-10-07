@@ -3,7 +3,8 @@ import { getSecret } from './secrets';
 
 export interface ReceiptLine {
   rawText: string; // testo così come appare sullo scontrino
-  name: string; // nome interpretato/esteso dall'AI
+  name: string; // nome interpretato, chiaro e descrittivo (es. "Cartoncino blu 300g")
+  brand?: string; // marca, se riconoscibile (es. "Fabriano")
   quantity: number;
   unitPrice?: number;
 }
@@ -20,10 +21,14 @@ Testo:
 ${ocrText}
 """
 Estrai ogni riga di prodotto acquistato. Per ogni riga capisci cosa potrebbe essere l'oggetto reale anche se
-abbreviato o con errori OCR (es. "CARTA A4 80G" o "CARTA A480G" potrebbe essere "Cartoncino bianco A4").
+abbreviato o con errori OCR. Per il campo "name" scrivi un nome chiaro, leggibile e il più descrittivo possibile
+per chi gestisce un magazzino di cartoleria/hobbistica: includi quando riconoscibili colore, grammatura/peso,
+formato o dimensione e tipo di materiale (es. da "CARTA A4 80G BIA" scrivi "Cartoncino bianco A4 80g", da
+"PENNARELLI 12PZ ASS" scrivi "Pennarelli colorati set da 12"). Se riconosci una marca/brand (es. Fabriano,
+Canson, Cricut, Stabilo...) mettila SOLO nel campo separato "brand", non ripeterla nel "name".
 Ignora intestazione negozio, righe di totale, sconto, IVA, resto, metodo di pagamento, scontrino fiscale.
 Rispondi SOLO con un array JSON valido, senza markdown, senza testo prima o dopo, in questo formato esatto:
-[{"rawText": "testo originale della riga", "name": "nome interpretato del prodotto", "quantity": numero, "unitPrice": numero_o_null}]`;
+[{"rawText": "testo originale della riga", "name": "nome chiaro e descrittivo", "brand": "marca_o_null", "quantity": numero, "unitPrice": numero_o_null}]`;
 }
 
 async function ocrText(file: File): Promise<string> {
@@ -94,6 +99,7 @@ export async function readReceipt(file: File): Promise<ReceiptLine[]> {
     .map((item) => ({
       rawText: String(item.rawText ?? ''),
       name: String(item.name ?? item.rawText ?? ''),
+      brand: item.brand && String(item.brand).trim() ? String(item.brand).trim() : undefined,
       quantity: Number(item.quantity) || 1,
       unitPrice: item.unitPrice != null ? Number(item.unitPrice) || undefined : undefined,
     }))

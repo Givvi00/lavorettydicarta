@@ -169,6 +169,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
 
                   <p className="text-xs text-lc-muted">
                     Scontrino: <span className="italic">"{row.line.rawText}"</span>
+                    {row.line.brand ? ` · ${row.line.brand}` : ''}
                   </p>
 
                   {row.action === 'created' ? (
@@ -241,6 +242,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
                 unit: 'pz',
                 unitCost: rows[creatingForRow].line.unitPrice ?? 0,
                 stockQty: rows[creatingForRow].quantity,
+                notes: rows[creatingForRow].line.brand ? `Marca: ${rows[creatingForRow].line.brand}` : undefined,
               }}
               onClose={() => setCreatingForRow(null)}
               onSave={async (data) => {
