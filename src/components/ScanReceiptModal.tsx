@@ -1,18 +1,40 @@
 import { useState } from 'react';
-import { Loader2, Receipt, Check, X, PlusCircle } from 'lucide-react';
-import { Modal, Field, Input, PrimaryButton, SecondaryButton, Select } from '@/components/ui/primitives';
+import { Loader2, Receipt, X, PlusCircle, Search } from 'lucide-react';
+import { Modal, Field, Input, PrimaryButton, SecondaryButton, Select, Badge } from '@/components/ui/primitives';
 import { useStore } from '@/store/useStore';
+import { MaterialForm } from '@/pages/Materiali';
 import { readReceipt, type ReceiptLine } from '@/services/receiptOcr';
 import { bestMatch } from '@/utils/similarity';
 import type { Material } from '@/types';
 
+type Confidence = 'high' | 'medium' | 'low';
+
 interface ReviewRow {
   line: ReceiptLine;
-  action: 'update' | 'create' | 'skip';
-  materialId: string; // per 'update'
-  newName: string; // per 'create'
+  confidence: Confidence;
+  action: 'update' | 'created' | 'skip';
+  materialId: string; // per 'update'/'created'
   quantity: number;
 }
+
+const HIGH_THRESHOLD = 0.5;
+const LOW_THRESHOLD = 0.2;
+
+const CONFIDENCE_LABEL: Record<Confidence, string> = {
+  high: 'Corrispondenza trovata',
+  medium: 'Forse corrisponde, verifica',
+  low: 'Nessuna corrispondenza',
+};
+const CONFIDENCE_TONE: Record<Confidence, 'success' | 'accent' | 'danger'> = {
+  high: 'success',
+  medium: 'accent',
+  low: 'danger',
+};
+const CONFIDENCE_CARD: Record<Confidence, string> = {
+  high: 'border-lc-success/40 bg-lc-success/5',
+  medium: 'border-lc-accent/60 bg-lc-accent/5',
+  low: 'border-lc-danger/40 bg-lc-danger/5',
+};
 
 export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { materials, upsertMaterial } = useStore();
@@ -20,6 +42,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
   const [error, setError] = useState('');
   const [rows, setRows] = useState<ReviewRow[]>([]);
   const [saving, setSaving] = useState(false);
+  const [creatingForRow, setCreatingForRow] = useState<number | null>(null);
 
   async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -36,12 +59,14 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
       }
       setRows(
         lines.map((line) => {
-          const match = bestMatch(line.name, materials, (m) => m.name);
+          const match = bestMatch(line.name, materials, (m) => m.name, 0);
+          const confidence: Confidence =
+            match && match.score >= HIGH_THRESHOLD ? 'high' : match && match.score >= LOW_THRESHOLD ? 'medium' : 'low';
           return {
             line,
-            action: match ? 'update' : 'create',
-            materialId: match?.item.id ?? '',
-            newName: line.name,
+            confidence,
+            action: confidence === 'low' ? 'skip' : 'update',
+            materialId: confidence !== 'low' ? (match?.item.id ?? '') : '',
             quantity: line.quantity,
           };
         })
@@ -61,19 +86,10 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
     setSaving(true);
     try {
       for (const row of rows) {
-        if (row.action === 'skip') continue;
-        if (row.action === 'update' && row.materialId) {
-          const existing = materials.find((m) => m.id === row.materialId);
-          if (!existing) continue;
-          await upsertMaterial({ id: existing.id, stockQty: existing.stockQty + row.quantity });
-        } else if (row.action === 'create') {
-          await upsertMaterial({
-            name: row.newName.trim() || row.line.name,
-            unit: 'pz',
-            unitCost: row.line.unitPrice ?? 0,
-            stockQty: row.quantity,
-          });
-        }
+        if (row.action !== 'update' || !row.materialId) continue;
+        const existing = materials.find((m) => m.id === row.materialId);
+        if (!existing) continue;
+        await upsertMaterial({ id: existing.id, stockQty: existing.stockQty + row.quantity });
       }
       reset();
       onClose();
@@ -130,73 +146,82 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
       {step === 'review' && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-lc-muted">
-            Controlla gli abbinamenti prima di salvare. Puoi cambiare materiale, creare un nuovo
-            articolo o escludere una riga.
+            <Badge tone="success">verde</Badge> trovato automaticamente ·{' '}
+            <Badge tone="accent">arancione</Badge> verifica tu ·{' '}
+            <Badge tone="danger">rosso</Badge> nessuna corrispondenza (es. un frullatore)
           </p>
           <div className="flex flex-col gap-3">
-            {rows.map((row, i) => (
-              <div key={i} className="flex flex-col gap-2 rounded-btn border border-lc-border p-2">
-                <p className="text-xs text-lc-muted">
-                  Scontrino: <span className="italic">"{row.line.rawText}"</span>
-                </p>
+            {rows.map((row, i) => {
+              const matchedMaterial = materials.find((m) => m.id === row.materialId);
+              return (
+                <div key={i} className={`flex flex-col gap-2 rounded-btn border p-2 ${CONFIDENCE_CARD[row.confidence]}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge tone={CONFIDENCE_TONE[row.confidence]}>{CONFIDENCE_LABEL[row.confidence]}</Badge>
+                    <button
+                      type="button"
+                      onClick={() => updateRow(i, { action: 'skip', materialId: '' })}
+                      className="text-lc-muted hover:text-lc-danger"
+                      aria-label="Ignora riga"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
 
-                <div className="flex gap-2">
-                  <SecondaryButton
-                    type="button"
-                    className={`flex-1 px-2 py-1.5 text-xs ${row.action === 'update' ? 'border-lc-accent' : ''}`}
-                    onClick={() => updateRow(i, { action: 'update' })}
-                  >
-                    <Check size={14} className="mr-1 inline -mt-0.5" /> Aggiorna esistente
-                  </SecondaryButton>
-                  <SecondaryButton
-                    type="button"
-                    className={`flex-1 px-2 py-1.5 text-xs ${row.action === 'create' ? 'border-lc-accent' : ''}`}
-                    onClick={() => updateRow(i, { action: 'create' })}
-                  >
-                    <PlusCircle size={14} className="mr-1 inline -mt-0.5" /> Crea nuovo
-                  </SecondaryButton>
-                  <SecondaryButton
-                    type="button"
-                    className={`px-2 py-1.5 text-xs ${row.action === 'skip' ? 'border-lc-danger' : ''}`}
-                    onClick={() => updateRow(i, { action: 'skip' })}
-                  >
-                    <X size={14} />
-                  </SecondaryButton>
+                  <p className="text-xs text-lc-muted">
+                    Scontrino: <span className="italic">"{row.line.rawText}"</span>
+                  </p>
+
+                  {row.action === 'created' ? (
+                    <p className="text-sm font-semibold text-lc-success">
+                      ✓ Creato: {matchedMaterial?.name ?? row.line.name} (+{row.quantity})
+                    </p>
+                  ) : row.action === 'skip' ? (
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-lc-muted">Ignorata.</p>
+                      <SecondaryButton
+                        type="button"
+                        className="px-2 py-1 text-xs"
+                        onClick={() => updateRow(i, { action: 'update' })}
+                      >
+                        Annulla
+                      </SecondaryButton>
+                    </div>
+                  ) : (
+                    <>
+                      <Field label="Associa a materiale esistente">
+                        <div className="flex items-center gap-1.5">
+                          <Search size={14} className="shrink-0 text-lc-muted" />
+                          <Select
+                            className="flex-1"
+                            value={row.materialId}
+                            onChange={(e) => updateRow(i, { materialId: e.target.value })}
+                          >
+                            <option value="">Scegli materiale...</option>
+                            {materials.map((m: Material) => (
+                              <option key={m.id} value={m.id}>
+                                {m.name}
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
+                      </Field>
+                      <Field label="Quantità">
+                        <Input
+                          type="number"
+                          step="1"
+                          value={row.quantity}
+                          onChange={(e) => updateRow(i, { quantity: parseFloat(e.target.value) || 0 })}
+                          className="w-24"
+                        />
+                      </Field>
+                      <SecondaryButton type="button" className="text-xs" onClick={() => setCreatingForRow(i)}>
+                        <PlusCircle size={14} className="mr-1 inline -mt-0.5" /> Crea nuovo materiale
+                      </SecondaryButton>
+                    </>
+                  )}
                 </div>
-
-                {row.action === 'update' && (
-                  <Select
-                    value={row.materialId}
-                    onChange={(e) => updateRow(i, { materialId: e.target.value })}
-                  >
-                    <option value="">Scegli materiale...</option>
-                    {materials.map((m: Material) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </Select>
-                )}
-                {row.action === 'create' && (
-                  <Input
-                    value={row.newName}
-                    onChange={(e) => updateRow(i, { newName: e.target.value })}
-                    placeholder="Nome nuovo materiale"
-                  />
-                )}
-                {row.action !== 'skip' && (
-                  <Field label="Quantità">
-                    <Input
-                      type="number"
-                      step="1"
-                      value={row.quantity}
-                      onChange={(e) => updateRow(i, { quantity: parseFloat(e.target.value) || 0 })}
-                      className="w-24"
-                    />
-                  </Field>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-2 flex items-center justify-between">
@@ -207,6 +232,24 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
               {saving ? 'Salvo...' : 'Conferma e salva'}
             </PrimaryButton>
           </div>
+
+          {creatingForRow != null && (
+            <MaterialForm
+              open={true}
+              initial={{
+                name: rows[creatingForRow].line.name,
+                unit: 'pz',
+                unitCost: rows[creatingForRow].line.unitPrice ?? 0,
+                stockQty: rows[creatingForRow].quantity,
+              }}
+              onClose={() => setCreatingForRow(null)}
+              onSave={async (data) => {
+                const created = await upsertMaterial(data);
+                updateRow(creatingForRow, { action: 'created', materialId: created.id });
+                setCreatingForRow(null);
+              }}
+            />
+          )}
         </div>
       )}
     </Modal>

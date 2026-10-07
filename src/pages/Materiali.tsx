@@ -130,7 +130,7 @@ export function Materiali() {
   );
 }
 
-function MaterialForm({
+export function MaterialForm({
   open,
   onClose,
   onSave,
@@ -141,7 +141,7 @@ function MaterialForm({
   onClose: () => void;
   onSave: (data: Partial<Material>) => void;
   onDelete?: () => void;
-  initial?: Material;
+  initial?: Partial<Material>;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [unit, setUnit] = useState(initial?.unit ?? 'pz');
@@ -158,7 +158,7 @@ function MaterialForm({
   const costPerUnitFromPackage = packageQty > 0 && packagePrice > 0 ? packagePrice / packageQty : null;
 
   return (
-    <Modal open={open} onClose={onClose} title={initial ? 'Modifica materiale' : 'Nuovo materiale'}>
+    <Modal open={open} onClose={onClose} title={initial?.id ? 'Modifica materiale' : 'Nuovo materiale'}>
       <form
         className="flex flex-col gap-3"
         onSubmit={(e) => {
