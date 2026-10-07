@@ -8,7 +8,8 @@ export interface ReceiptLine {
 }
 
 // Modello Llama con visione ospitato su Groq (piano gratuito, nessuna carta richiesta).
-const MODEL = 'llama-3.2-90b-vision-preview';
+// Il precedente (llama-3.2-90b-vision-preview) è stato dismesso da Groq.
+const MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
 const PROMPT = `Questo è uno scontrino di un negozio (es. Action, Amazon, cartoleria). Estrai ogni riga di prodotto acquistato.
 Per ogni riga capisci cosa potrebbe essere l'oggetto reale anche se sullo scontrino è scritto in modo abbreviato
