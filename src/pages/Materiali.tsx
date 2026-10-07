@@ -32,10 +32,10 @@ export function Materiali() {
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold md:text-2xl">Materiali</h1>
         <div className="flex gap-2">
-          <SecondaryButton onClick={() => setScanning(true)}>
+          <SecondaryButton data-tour="btn-scontrino" onClick={() => setScanning(true)}>
             <Receipt size={16} className="mr-1 inline -mt-0.5" /> Scontrino
           </SecondaryButton>
-          <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+          <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
         </div>
       </div>
 

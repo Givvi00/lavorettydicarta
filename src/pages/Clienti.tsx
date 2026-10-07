@@ -17,7 +17,7 @@ export function Clienti() {
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold md:text-2xl">Clienti</h1>
-        <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+        <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
       </div>
 
       <Input

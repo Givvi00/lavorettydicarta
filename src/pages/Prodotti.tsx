@@ -44,7 +44,7 @@ export function Prodotti() {
           <SecondaryButton onClick={() => setManagingCategories(true)}>
             <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
           </SecondaryButton>
-          <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+          <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
         </div>
       </div>
 

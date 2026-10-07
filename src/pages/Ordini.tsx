@@ -48,7 +48,7 @@ export function Ordini() {
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold md:text-2xl">Ordini &amp; preventivi</h1>
-        <PrimaryButton onClick={() => setCreating(true)} disabled={customers.length === 0}>
+        <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)} disabled={customers.length === 0}>
           + Nuovo
         </PrimaryButton>
       </div>

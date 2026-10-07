@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, Boxes, Package, ClipboardList, Sun, Moon, Setti
 import { useStore } from '@/store/useStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SettingsModal } from '@/components/SettingsModal';
+import { OnboardingTour } from '@/components/OnboardingTour';
 import { LoginScreen } from '@/pages/LoginScreen';
 import { currentAccount, finishGoogle, hasStoredSession, signOut, GOOGLE_RETURN, type Account } from '@/services/account';
 import { Dashboard } from '@/pages/Dashboard';
@@ -27,6 +28,7 @@ function App() {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [account, setAccount] = useState<Account | null | 'loading'>('loading');
+  const [tourActive, setTourActive] = useState(false);
   const { ready, load } = useStore();
   const { theme, toggleTheme } = useTheme();
 
@@ -47,6 +49,24 @@ function App() {
   useEffect(() => {
     if (account && account !== 'loading') load();
   }, [account, load]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      if (!localStorage.getItem('lc-onboarding-done')) setTourActive(true);
+    } catch {
+      /* localStorage non disponibile: nessun tour automatico */
+    }
+  }, [ready]);
+
+  function finishTour() {
+    setTourActive(false);
+    try {
+      localStorage.setItem('lc-onboarding-done', '1');
+    } catch {
+      /* ignora */
+    }
+  }
 
   if (account === 'loading') {
     return (
@@ -87,6 +107,7 @@ function App() {
             return (
               <button
                 key={id}
+                data-tour={`nav-${id}`}
                 onClick={() => setTab(id)}
                 className={`flex items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold transition-colors ${
                   active ? 'bg-lc-accent/30 text-lc-olive' : 'text-lc-muted hover:bg-lc-border/30 hover:text-lc-text'
@@ -100,6 +121,7 @@ function App() {
         </nav>
         <div className="flex flex-col gap-1 border-t-2 border-lc-border p-3">
           <button
+            data-tour="btn-impostazioni"
             onClick={() => setSettingsOpen(true)}
             className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold text-lc-muted transition-colors hover:bg-lc-border/30 hover:text-lc-text"
           >
@@ -107,6 +129,7 @@ function App() {
             Impostazioni
           </button>
           <button
+            data-tour="btn-tema"
             onClick={toggleTheme}
             className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold text-lc-muted transition-colors hover:bg-lc-border/30 hover:text-lc-text"
           >
@@ -136,6 +159,7 @@ function App() {
               <p className="text-xs font-semibold text-lc-accent-ink/70">il tuo angolo creativo ✂️✨</p>
             </div>
             <button
+              data-tour="btn-impostazioni"
               onClick={() => setSettingsOpen(true)}
               aria-label="Impostazioni"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 text-lc-accent-ink transition-transform active:scale-90"
@@ -143,6 +167,7 @@ function App() {
               <Settings size={17} />
             </button>
             <button
+              data-tour="btn-tema"
               onClick={toggleTheme}
               aria-label="Cambia tema"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 text-lc-accent-ink transition-transform active:scale-90"
@@ -171,6 +196,7 @@ function App() {
             return (
               <button
                 key={id}
+                data-tour={`nav-${id}`}
                 onClick={() => setTab(id)}
                 className={`flex flex-1 flex-col items-center gap-0.5 rounded-btn py-1.5 text-[11px] font-bold transition-colors ${
                   active ? 'bg-lc-accent/30 text-lc-olive' : 'text-lc-muted'
@@ -184,7 +210,16 @@ function App() {
         </nav>
       </div>
 
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onReplayTour={() => {
+          setSettingsOpen(false);
+          setTab('dashboard');
+          setTourActive(true);
+        }}
+      />
+      <OnboardingTour active={tourActive} onFinish={finishTour} />
     </div>
   );
 }

@@ -5,7 +5,15 @@ import { getSecret } from '@/services/secrets';
 import { useStore } from '@/store/useStore';
 import { migrateLocalDataToSupabase, type MigrationResult } from '@/services/migrateLocalData';
 
-export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function SettingsModal({
+  open,
+  onClose,
+  onReplayTour,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onReplayTour: () => void;
+}) {
   const { rates, setRates } = useSettings();
   const { load } = useStore();
   const [designRate, setDesignRate] = useState(rates.designRate);
@@ -87,6 +95,11 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             onChange={(e) => setProductionRate(parseFloat(e.target.value) || 0)}
           />
         </Field>
+
+        <p className="mt-2 text-sm font-semibold text-lc-muted">Guida</p>
+        <SecondaryButton type="button" onClick={onReplayTour}>
+          Rivedi il tour guidato
+        </SecondaryButton>
 
         <p className="mt-2 text-sm font-semibold text-lc-muted">Dati salvati su questo dispositivo</p>
         <p className="text-sm text-lc-muted">
