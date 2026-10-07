@@ -214,16 +214,25 @@ export function OnboardingTour({ active, onFinish }: { active: boolean; onFinish
   const bubbleBelow = spaceBelow > 180;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100]">
+    // pointer-events-none sul contenitore: altrimenti il suo riquadro (trasparente ma pur
+    // sempre un elemento) intercetterebbe i click anche sopra il "buco", bloccando il click
+    // sul vero pulsante della pagina. Solo le fasce scure e il fumetto devono catturare i click.
+    <div className="pointer-events-none fixed inset-0 z-[100]">
       {/* 4 fasce scure attorno al buco: lasciano passare i click solo nel buco */}
-      <div className="fixed bg-lc-accent-ink/60" style={{ top: 0, left: 0, width: '100%', height: Math.max(0, rect.top) }} />
       <div
-        className="fixed bg-lc-accent-ink/60"
+        className="pointer-events-auto fixed bg-lc-accent-ink/60"
+        style={{ top: 0, left: 0, width: '100%', height: Math.max(0, rect.top) }}
+      />
+      <div
+        className="pointer-events-auto fixed bg-lc-accent-ink/60"
         style={{ top: holeBottom, left: 0, width: '100%', height: Math.max(0, vh - holeBottom) }}
       />
-      <div className="fixed bg-lc-accent-ink/60" style={{ top: rect.top, left: 0, width: Math.max(0, rect.left), height: rect.height }} />
       <div
-        className="fixed bg-lc-accent-ink/60"
+        className="pointer-events-auto fixed bg-lc-accent-ink/60"
+        style={{ top: rect.top, left: 0, width: Math.max(0, rect.left), height: rect.height }}
+      />
+      <div
+        className="pointer-events-auto fixed bg-lc-accent-ink/60"
         style={{ top: rect.top, left: holeRight, width: Math.max(0, vw - holeRight), height: rect.height }}
       />
 
@@ -235,7 +244,7 @@ export function OnboardingTour({ active, onFinish }: { active: boolean; onFinish
 
       {/* Fumetto, posizionato sopra o sotto il buco in base allo spazio disponibile */}
       <div
-        className="fixed"
+        className="pointer-events-auto fixed"
         style={{
           top: bubbleBelow ? holeBottom + 10 : undefined,
           bottom: bubbleBelow ? undefined : Math.max(8, vh - rect.top + 10),
