@@ -2,16 +2,15 @@
 // La libreria Supabase si carica solo quando serve, così l'app resta leggera per chi non ha ancora effettuato l'accesso.
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-// TODO: incollare qui URL e anon key del progetto Supabase creato per Lavoretty di Carta.
 // Pubblici per design (come in mcdonaldz-tracker): a proteggere i dati sono le regole RLS, non la segretezza di questi valori.
-const SUPABASE_URL = 'PENDING_SETUP';
-const SUPABASE_KEY = 'PENDING_SETUP';
+const SUPABASE_URL = 'https://ujaoawitgrlcszsdaoqe.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_INxOdVWiXUgDr_ORA2EolQ_13RQ-arl';
 const SESSION_KEY = 'lc-auth';
 
 // Le uniche due persone che possono entrare nell'app. Chiunque altro fa login con Google ma viene
 // subito disconnesso: la vera barriera però sta nella Google Cloud Console (OAuth consent screen in
 // modalità "Testing" con solo questi due indirizzi come test user) — Google stesso rifiuta gli altri.
-const ALLOWED_EMAILS = ['vitale.gabriele24@gmail.com'];
+const ALLOWED_EMAILS = ['vitale.gabriele24@gmail.com', 'paopt96@gmail.com'];
 
 let clientPromise: Promise<SupabaseClient> | null = null;
 
@@ -76,7 +75,7 @@ export async function signOut(): Promise<void> {
 }
 
 // Pulsante ufficiale "Accedi con Google", disegnato dentro il container passato.
-const GOOGLE_CLIENT_ID = 'PENDING_SETUP';
+const GOOGLE_CLIENT_ID = '562181763705-itd4f77requh7fb2ugrpadmu43v4c3nr.apps.googleusercontent.com';
 
 type GoogleCredential = { credential: string };
 type GoogleIdentity = {
