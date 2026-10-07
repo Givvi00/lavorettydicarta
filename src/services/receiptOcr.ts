@@ -7,10 +7,11 @@ export interface ReceiptLine {
   unitPrice?: number;
 }
 
-// "gemini-flash-latest" punterebbe ai modelli 3.x, che Google richiede a pagamento (errore 402
-// "credito prepagato esaurito" anche con fatturazione mai attivata). La serie 2.5 resta invece
-// gratuita con supporto immagini, quindi la usiamo esplicitamente.
-const MODEL = 'gemini-2.5-flash';
+// "gemini-flash-latest" punta ai modelli 3.x, che Google richiede a pagamento (errore 402
+// "credito prepagato esaurito" anche con fatturazione mai attivata). "gemini-2.5-flash" non è
+// più disponibile per i progetti nuovi (errore 404 "no longer available to new users").
+// Tentativo con la variante "lite", che potrebbe seguire una policy diversa.
+const MODEL = 'gemini-flash-lite-latest';
 
 const PROMPT = `Questo è uno scontrino di un negozio (es. Action, Amazon, cartoleria). Estrai ogni riga di prodotto acquistato.
 Per ogni riga capisci cosa potrebbe essere l'oggetto reale anche se sullo scontrino è scritto in modo abbreviato
