@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Loader2, Receipt, Check, X, PlusCircle } from 'lucide-react';
 import { Modal, Field, Input, PrimaryButton, SecondaryButton, Select } from '@/components/ui/primitives';
-import { useAIKey } from '@/hooks/useAIKey';
 import { useStore } from '@/store/useStore';
 import { readReceipt, type ReceiptLine } from '@/services/receiptOcr';
 import { bestMatch } from '@/utils/similarity';
@@ -16,7 +15,6 @@ interface ReviewRow {
 }
 
 export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { geminiKey } = useAIKey();
   const { materials, upsertMaterial } = useStore();
   const [step, setStep] = useState<'pick' | 'loading' | 'review' | 'error'>('pick');
   const [error, setError] = useState('');
@@ -28,15 +26,9 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
     e.target.value = '';
     if (!file) return;
 
-    if (!geminiKey) {
-      setError('Prima imposta la chiave API Gemini nelle Impostazioni (icona ingranaggio).');
-      setStep('error');
-      return;
-    }
-
     setStep('loading');
     try {
-      const lines = await readReceipt(file, geminiKey);
+      const lines = await readReceipt(file);
       if (lines.length === 0) {
         setError('Non ho trovato nessun articolo leggibile su questo scontrino.');
         setStep('error');

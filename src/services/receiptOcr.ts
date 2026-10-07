@@ -1,3 +1,5 @@
+import { getGeminiKey } from './secrets';
+
 export interface ReceiptLine {
   rawText: string; // testo così come appare sullo scontrino
   name: string; // nome interpretato/esteso dall'AI
@@ -22,8 +24,9 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-export async function readReceipt(file: File, apiKey: string): Promise<ReceiptLine[]> {
-  if (!apiKey) throw new Error('Manca la chiave API Gemini: impostala nelle Impostazioni.');
+export async function readReceipt(file: File): Promise<ReceiptLine[]> {
+  const apiKey = await getGeminiKey();
+  if (!apiKey) throw new Error('Scanner non configurato: avvisa chi gestisce il sito.');
 
   const base64 = await fileToBase64(file);
 
@@ -48,7 +51,7 @@ export async function readReceipt(file: File, apiKey: string): Promise<ReceiptLi
 
   if (!response.ok) {
     if (response.status === 400 || response.status === 403) {
-      throw new Error('Chiave API Gemini non valida: controllala nelle Impostazioni.');
+      throw new Error('Chiave API Gemini non valida o scaduta: avvisa chi gestisce il sito.');
     }
     if (response.status === 429) {
       throw new Error('Troppe richieste a Gemini in poco tempo: riprova tra qualche minuto.');
