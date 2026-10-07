@@ -7,7 +7,9 @@ export interface ReceiptLine {
   unitPrice?: number;
 }
 
-const MODEL = 'gemini-2.0-flash';
+// Alias che punta sempre al modello Flash stabile più recente: evita di dover aggiornare
+// a mano il codice ogni volta che Google rilascia/dismette una versione (es. 2.0 -> 3.x).
+const MODEL = 'gemini-flash-latest';
 
 const PROMPT = `Questo è uno scontrino di un negozio (es. Action, Amazon, cartoleria). Estrai ogni riga di prodotto acquistato.
 Per ogni riga capisci cosa potrebbe essere l'oggetto reale anche se sullo scontrino è scritto in modo abbreviato
@@ -56,7 +58,9 @@ export async function readReceipt(file: File): Promise<ReceiptLine[]> {
     if (response.status === 429) {
       throw new Error('Troppe richieste a Gemini in poco tempo: riprova tra qualche minuto.');
     }
-    throw new Error('Errore nel leggere lo scontrino, riprova.');
+    const bodyText = await response.text().catch(() => '');
+    console.error('Gemini error', response.status, bodyText);
+    throw new Error(`Errore nel leggere lo scontrino (${response.status}), riprova.`);
   }
 
   const data = await response.json();
