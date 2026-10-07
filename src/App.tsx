@@ -1,8 +1,10 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { LayoutDashboard, Users, Boxes, Package, ClipboardList, Sun, Moon, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Boxes, Package, ClipboardList, Sun, Moon, Settings, LogOut } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SettingsModal } from '@/components/SettingsModal';
+import { LoginScreen } from '@/pages/LoginScreen';
+import { currentAccount, finishGoogle, hasStoredSession, signOut, GOOGLE_RETURN, type Account } from '@/services/account';
 import { Dashboard } from '@/pages/Dashboard';
 import { Clienti } from '@/pages/Clienti';
 import { Materiali } from '@/pages/Materiali';
@@ -24,12 +26,40 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
 function App() {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [account, setAccount] = useState<Account | null | 'loading'>('loading');
   const { ready, load } = useStore();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (GOOGLE_RETURN) {
+      finishGoogle()
+        .then(setAccount)
+        .catch(() => setAccount(null));
+    } else if (hasStoredSession()) {
+      currentAccount()
+        .then(setAccount)
+        .catch(() => setAccount(null));
+    } else {
+      setAccount(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (account && account !== 'loading') load();
+  }, [account, load]);
+
+  if (account === 'loading') {
+    return (
+      <div className="flex h-dvh flex-col items-center justify-center gap-4 bg-lc-bg">
+        <img src={logo} alt="" className="h-28 w-28 animate-pop-in rounded-blob shadow-soft" />
+        <p className="font-display text-lc-muted">Caricamento...</p>
+      </div>
+    );
+  }
+
+  if (!account) {
+    return <LoginScreen onSignedIn={setAccount} />;
+  }
 
   if (!ready) {
     return (
@@ -82,6 +112,13 @@ function App() {
           >
             {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
             {theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'}
+          </button>
+          <button
+            onClick={() => signOut().then(() => setAccount(null))}
+            className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold text-lc-muted transition-colors hover:bg-lc-border/30 hover:text-lc-text"
+          >
+            <LogOut size={19} />
+            Esci ({account.email})
           </button>
         </div>
       </aside>
