@@ -2,14 +2,35 @@ import { useState } from 'react';
 import { Modal, Field, Input, PrimaryButton, SecondaryButton, Card } from '@/components/ui/primitives';
 import { useSettings } from '@/hooks/useSettings';
 import { getSecret } from '@/services/secrets';
+import { useStore } from '@/store/useStore';
+import { migrateLocalDataToSupabase, type MigrationResult } from '@/services/migrateLocalData';
 
 export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { rates, setRates } = useSettings();
+  const { load } = useStore();
   const [designRate, setDesignRate] = useState(rates.designRate);
   const [productionRate, setProductionRate] = useState(rates.productionRate);
   const [groqModels, setGroqModels] = useState<string[] | null>(null);
   const [groqError, setGroqError] = useState('');
   const [checking, setChecking] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<MigrationResult | null>(null);
+  const [migrationError, setMigrationError] = useState('');
+
+  async function runMigration() {
+    setMigrating(true);
+    setMigrationError('');
+    setMigrationResult(null);
+    try {
+      const result = await migrateLocalDataToSupabase();
+      setMigrationResult(result);
+      await load();
+    } catch {
+      setMigrationError('Errore durante il trasferimento, riprova.');
+    } finally {
+      setMigrating(false);
+    }
+  }
 
   async function checkGroqModels() {
     setChecking(true);
@@ -66,6 +87,22 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             onChange={(e) => setProductionRate(parseFloat(e.target.value) || 0)}
           />
         </Field>
+
+        <p className="mt-2 text-sm font-semibold text-lc-muted">Dati salvati su questo dispositivo</p>
+        <p className="text-sm text-lc-muted">
+          Se hai usato l'app prima che i dati fossero condivisi, qui puoi caricare una volta i dati già inseriti
+          su questo dispositivo nel database condiviso, cosi' li vedi anche dagli altri account.
+        </p>
+        <SecondaryButton type="button" onClick={runMigration} disabled={migrating}>
+          {migrating ? 'Trasferimento in corso...' : 'Carica i dati di questo dispositivo nel database condiviso'}
+        </SecondaryButton>
+        {migrationError && <p className="text-sm text-lc-danger">{migrationError}</p>}
+        {migrationResult && (
+          <p className="text-sm text-lc-success">
+            Trasferiti: {migrationResult.customers} clienti, {migrationResult.categories} categorie,{' '}
+            {migrationResult.materials} materiali, {migrationResult.products} prodotti, {migrationResult.orders} ordini.
+          </p>
+        )}
 
         <p className="mt-2 text-sm font-semibold text-lc-muted">Scanner scontrini (diagnostica)</p>
         <SecondaryButton type="button" onClick={checkGroqModels} disabled={checking}>
