@@ -104,7 +104,7 @@ function App() {
             className="flex w-full items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold text-lc-muted transition-colors hover:bg-lc-border/30 hover:text-lc-text"
           >
             <Settings size={19} />
-            Tariffe orarie
+            Impostazioni
           </button>
           <button
             onClick={toggleTheme}
@@ -137,7 +137,7 @@ function App() {
             </div>
             <button
               onClick={() => setSettingsOpen(true)}
-              aria-label="Tariffe orarie"
+              aria-label="Impostazioni"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/10 text-lc-accent-ink transition-transform active:scale-90"
             >
               <Settings size={17} />

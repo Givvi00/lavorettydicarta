@@ -12,8 +12,9 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Boxes, ExternalLink, Package2 } from 'lucide-react';
+import { Boxes, ExternalLink, Package2, Receipt } from 'lucide-react';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
+import { ScanReceiptModal } from '@/components/ScanReceiptModal';
 import { formatEUR } from '@/utils/calc';
 import type { Material } from '@/types';
 
@@ -21,6 +22,7 @@ export function Materiali() {
   const { materials, upsertMaterial, deleteMaterial } = useStore();
   const [editing, setEditing] = useState<Material | null>(null);
   const [creating, setCreating] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [query, setQuery] = useState('');
 
   const filtered = materials.filter((m) => m.name.toLowerCase().includes(query.toLowerCase()));
@@ -29,7 +31,12 @@ export function Materiali() {
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold md:text-2xl">Materiali</h1>
-        <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+        <div className="flex gap-2">
+          <SecondaryButton onClick={() => setScanning(true)}>
+            <Receipt size={16} className="mr-1 inline -mt-0.5" /> Scontrino
+          </SecondaryButton>
+          <PrimaryButton onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+        </div>
       </div>
 
       <Input
@@ -117,6 +124,8 @@ export function Materiali() {
           }}
         />
       )}
+
+      {scanning && <ScanReceiptModal open={scanning} onClose={() => setScanning(false)} />}
     </div>
   );
 }
