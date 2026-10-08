@@ -13,10 +13,10 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { ClipboardList, Sparkles } from 'lucide-react';
+import { ClipboardList, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { CreateOrderByVoiceModal } from '@/components/CreateOrderByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
-import { formatEUR, orderSubtotal, orderTotal, newId } from '@/utils/calc';
+import { formatEUR, orderSubtotal, orderTotal, newId, materialShortfallsFor } from '@/utils/calc';
 import type { Order, OrderItem, OrderStatus } from '@/types';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -38,7 +38,7 @@ const STATUS_TONE: Record<OrderStatus, 'default' | 'success' | 'danger' | 'accen
 };
 
 export function Ordini() {
-  const { orders, customers, products, upsertOrder, deleteOrder } = useStore();
+  const { orders, customers, products, materials, upsertOrder, deleteOrder } = useStore();
   const [editing, setEditing] = useState<Order | null>(null);
   const [creating, setCreating] = useState(false);
   const [creatingByVoice, setCreatingByVoice] = useState(false);
@@ -109,6 +109,7 @@ export function Ordini() {
           open={creating}
           customers={customers}
           products={products}
+          materials={materials}
           onClose={() => setCreating(false)}
           onSave={async (data) => {
             await upsertOrder(data);
@@ -123,6 +124,7 @@ export function Ordini() {
           initial={editing}
           customers={customers}
           products={products}
+          materials={materials}
           onClose={() => setEditing(null)}
           onSave={async (data) => {
             await upsertOrder({ ...data, id: editing.id });
@@ -150,6 +152,7 @@ function OrderForm({
   initial,
   customers,
   products,
+  materials,
 }: {
   open: boolean;
   onClose: () => void;
@@ -158,6 +161,7 @@ function OrderForm({
   initial?: Order;
   customers: ReturnType<typeof useStore.getState>['customers'];
   products: ReturnType<typeof useStore.getState>['products'];
+  materials: ReturnType<typeof useStore.getState>['materials'];
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? customers[0]?.id ?? '');
   const [status, setStatus] = useState<OrderStatus>(initial?.status ?? 'preventivo');
@@ -173,6 +177,7 @@ function OrderForm({
   const total = orderTotal({ items, discount });
   const designHoursTotal = items.reduce((sum, it) => sum + (it.designHours ?? 0), 0);
   const designCostTotal = designHoursTotal * rates.designRate;
+  const shortfalls = materialShortfallsFor(items, products, materials).filter((s) => s.missing > 0);
 
   function addItem() {
     if (products.length === 0) return;
@@ -305,6 +310,31 @@ function OrderForm({
             ))}
           </div>
         </div>
+
+        {items.length > 0 && (
+          shortfalls.length === 0 ? (
+            <p className="flex items-center gap-1.5 rounded-btn border border-lc-success/30 bg-lc-success/10 p-2 text-sm font-semibold text-lc-success">
+              <CheckCircle2 size={16} /> Hai tutti i materiali necessari per quest'ordine.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-1.5 rounded-btn border border-lc-danger/30 bg-lc-danger/5 p-2">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-lc-danger">
+                <AlertTriangle size={16} /> Materiali insufficienti per quest'ordine
+              </p>
+              <ul className="flex flex-col gap-1 text-sm text-lc-muted">
+                {shortfalls.map((s) => (
+                  <li key={s.material.id}>
+                    <strong className="text-lc-text">{s.material.name}</strong>: ne servono {s.needed}{' '}
+                    {s.material.unit}, ne hai {s.available} — mancano{' '}
+                    <span className="font-semibold text-lc-danger">
+                      {Math.round(s.missing * 100) / 100} {s.material.unit}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        )}
 
         <Field label="Sconto (€)">
           <Input

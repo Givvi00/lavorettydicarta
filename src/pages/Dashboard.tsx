@@ -1,7 +1,7 @@
-import { ClipboardList, FileClock, Euro, Users2, AlertTriangle, Scissors } from 'lucide-react';
+import { ClipboardList, FileClock, Euro, Users2, AlertTriangle, ShoppingCart, Scissors } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Card, Badge, EmptyState } from '@/components/ui/primitives';
-import { formatEUR, orderTotal } from '@/utils/calc';
+import { formatEUR, orderTotal, aggregateMaterialShortfalls } from '@/utils/calc';
 
 const GIRL_NAME = 'Paola';
 
@@ -19,6 +19,7 @@ export function Dashboard() {
   const activeOrders = orders.filter((o) => o.status !== 'consegnato' && o.status !== 'annullato');
   const quotes = orders.filter((o) => o.status === 'preventivo');
   const lowStock = materials.filter((m) => m.minStock != null && m.stockQty <= m.minStock);
+  const shoppingList = aggregateMaterialShortfalls(orders, products, materials);
   const revenueThisMonth = orders
     .filter((o) => {
       const d = new Date(o.createdAt);
@@ -60,6 +61,24 @@ export function Dashboard() {
       </div>
 
       <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start md:gap-5">
+        {shoppingList.length > 0 && (
+          <Card className="border-lc-danger/30">
+            <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">
+              <ShoppingCart size={16} /> Da comprare per gli ordini in corso
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {shoppingList.map((s) => (
+                <li key={s.material.id} className="flex items-center justify-between text-sm">
+                  <span>{s.material.name}</span>
+                  <Badge tone="danger">
+                    mancano {Math.round(s.missing * 100) / 100} {s.material.unit}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+
         {lowStock.length > 0 && (
           <Card className="border-lc-danger/30">
             <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">

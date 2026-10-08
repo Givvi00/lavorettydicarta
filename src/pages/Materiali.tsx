@@ -12,20 +12,21 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Boxes, ExternalLink, Package2, Receipt } from 'lucide-react';
+import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart } from 'lucide-react';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { ScanReceiptModal } from '@/components/ScanReceiptModal';
-import { formatEUR } from '@/utils/calc';
+import { formatEUR, aggregateMaterialShortfalls } from '@/utils/calc';
 import type { Material } from '@/types';
 
 export function Materiali() {
-  const { materials, upsertMaterial, deleteMaterial } = useStore();
+  const { materials, orders, products, upsertMaterial, deleteMaterial } = useStore();
   const [editing, setEditing] = useState<Material | null>(null);
   const [creating, setCreating] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [query, setQuery] = useState('');
 
   const filtered = materials.filter((m) => m.name.toLowerCase().includes(query.toLowerCase()));
+  const shoppingList = aggregateMaterialShortfalls(orders, products, materials);
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
@@ -38,6 +39,24 @@ export function Materiali() {
           <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
         </div>
       </div>
+
+      {shoppingList.length > 0 && (
+        <Card className="border-lc-danger/30">
+          <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">
+            <ShoppingCart size={16} /> Da comprare per gli ordini in corso
+          </p>
+          <ul className="flex flex-col gap-1.5">
+            {shoppingList.map((s) => (
+              <li key={s.material.id} className="flex items-center justify-between text-sm">
+                <span>{s.material.name}</span>
+                <Badge tone="danger">
+                  mancano {Math.round(s.missing * 100) / 100} {s.material.unit}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Input
         className="md:max-w-xs"
