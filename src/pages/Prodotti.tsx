@@ -13,8 +13,9 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Package, Tags, Trash2, Clock } from 'lucide-react';
+import { Package, Tags, Trash2, Clock, Mic } from 'lucide-react';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
+import { CreateProductByVoiceModal } from '@/components/CreateProductByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
 import { formatEUR, totalCostOf, marginOf } from '@/utils/calc';
 import type { BomLine, Category, Product, ProductType } from '@/types';
@@ -27,6 +28,7 @@ export function Prodotti() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
   const [managingCategories, setManagingCategories] = useState(false);
+  const [creatingByVoice, setCreatingByVoice] = useState(false);
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
@@ -43,6 +45,9 @@ export function Prodotti() {
         <div className="flex gap-2">
           <SecondaryButton onClick={() => setManagingCategories(true)}>
             <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
+          </SecondaryButton>
+          <SecondaryButton onClick={() => setCreatingByVoice(true)}>
+            <Mic size={16} className="mr-1 inline -mt-0.5" /> Racconta
           </SecondaryButton>
           <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
         </div>
@@ -140,6 +145,10 @@ export function Prodotti() {
             setEditing(null);
           }}
         />
+      )}
+
+      {creatingByVoice && (
+        <CreateProductByVoiceModal open={creatingByVoice} onClose={() => setCreatingByVoice(false)} />
       )}
 
       {managingCategories && (
