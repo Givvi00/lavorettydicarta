@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Mic, Square, PlusCircle, Search, Keyboard } from 'lucide-react';
+import { Loader2, Mic, Square, PlusCircle, Search, Keyboard, Sparkles } from 'lucide-react';
 import { Modal, Field, Input, Textarea, PrimaryButton, SecondaryButton, Select, Badge } from '@/components/ui/primitives';
 import { useStore } from '@/store/useStore';
 import { MaterialForm } from '@/pages/Materiali';
@@ -219,22 +219,31 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
         <div className="flex flex-col items-center gap-4 py-6 text-center">
           {mode === 'voice' ? (
             <>
-              <p className="text-sm text-lc-muted">
-                Racconta cosa fai per questo prodotto: i materiali che usi, le quantità e quanto tempo ci
-                metti. Capisco io il resto.
+              <p className="flex items-center gap-1.5 text-sm text-lc-muted">
+                <Sparkles size={15} className="shrink-0 text-lc-pink" /> Racconta cosa fai per questo
+                prodotto: i materiali che usi, le quantità e quanto tempo ci metti. Capisco io il resto.
               </p>
-              <button
-                type="button"
-                onClick={recording ? stopRecording : startRecording}
-                className={`flex h-20 w-20 items-center justify-center rounded-full shadow-press transition-colors ${
-                  recording ? 'bg-lc-danger text-white animate-pulse' : 'bg-lc-accent text-lc-accent-text'
-                }`}
-                aria-label={recording ? 'Ferma registrazione' : 'Inizia registrazione'}
-              >
-                {recording ? <Square size={28} /> : <Mic size={28} />}
-              </button>
+              <div className="relative flex h-24 w-24 items-center justify-center">
+                {recording && (
+                  <>
+                    <span className="lc-ai-ring" />
+                    <span className="lc-ai-ring" style={{ animationDelay: '0.5s' }} />
+                    <span className="lc-ai-ring" style={{ animationDelay: '1s' }} />
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={recording ? stopRecording : startRecording}
+                  className={`relative flex h-20 w-20 items-center justify-center rounded-full text-lc-accent-text shadow-press transition-transform active:scale-95 ${
+                    recording ? 'bg-lc-danger text-white' : 'lc-ai-gradient'
+                  }`}
+                  aria-label={recording ? 'Ferma registrazione' : 'Inizia registrazione'}
+                >
+                  {recording ? <Square size={28} /> : <Mic size={28} />}
+                </button>
+              </div>
               <p className="text-sm font-semibold text-lc-muted">
-                {recording ? `Sto ascoltando... ${elapsed}s` : 'Tocca per iniziare a parlare'}
+                {recording ? `Sto ascoltando... ${elapsed}s` : 'Tocca per iniziare a parlare ✨'}
               </p>
               <button
                 type="button"
@@ -265,8 +274,13 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
                 >
                   <Mic size={13} className="mr-1 inline -mt-0.5" /> Preferisco parlare
                 </button>
-                <PrimaryButton type="button" onClick={handleTextSubmit} disabled={!typedText.trim()}>
-                  Interpreta
+                <PrimaryButton
+                  type="button"
+                  onClick={handleTextSubmit}
+                  disabled={!typedText.trim()}
+                  className="lc-ai-gradient border-transparent"
+                >
+                  <Sparkles size={15} className="mr-1 inline -mt-0.5" /> Interpreta
                 </PrimaryButton>
               </div>
             </>
@@ -275,9 +289,11 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
       )}
 
       {step === 'loading' && (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <Loader2 size={32} className="animate-spin text-lc-accent" />
-          <p className="text-sm text-lc-muted">
+        <div className="flex flex-col items-center gap-4 py-10 text-center">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-full lc-ai-gradient">
+            <Loader2 size={24} className="animate-spin text-lc-accent-text" />
+          </div>
+          <p className="font-display text-sm font-semibold lc-ai-shimmer-text">
             {transcript ? 'Capisco cosa serve per il prodotto...' : 'Ascolto e trascrivo...'}
           </p>
         </div>

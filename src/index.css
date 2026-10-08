@@ -59,3 +59,54 @@ body {
   background-image: radial-gradient(rgb(var(--lc-accent-ink) / 0.06) 1px, transparent 1px);
   background-size: 18px 18px;
 }
+
+/* Tocco "magico" per le funzioni AI (voce, scontrino): sfumatura animata oro/rosa che respira,
+   per far sentire che sta succedendo qualcosa di speciale senza uscire dalla palette del sito. */
+@keyframes lc-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes lc-glow-breathe {
+  0%, 100% { box-shadow: 0 0 0px 0px rgb(var(--lc-accent) / 0.5), 0 0 14px 2px rgb(var(--lc-pink) / 0.35); }
+  50% { box-shadow: 0 0 0px 6px rgb(var(--lc-accent) / 0.12), 0 0 26px 8px rgb(var(--lc-pink) / 0.5); }
+}
+
+@keyframes lc-ring-pulse {
+  0% { transform: scale(0.9); opacity: 0.55; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.lc-ai-gradient {
+  background-image: linear-gradient(
+    110deg,
+    rgb(var(--lc-accent)),
+    rgb(var(--lc-pink)),
+    rgb(var(--lc-olive)),
+    rgb(var(--lc-accent))
+  );
+  background-size: 300% 300%;
+  animation: lc-gradient-shift 4s ease-in-out infinite, lc-glow-breathe 2.6s ease-in-out infinite;
+}
+
+.lc-ai-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgb(var(--lc-pink) / 0.7);
+  animation: lc-ring-pulse 1.6s ease-out infinite;
+}
+
+.lc-ai-shimmer-text {
+  background-image: linear-gradient(
+    100deg,
+    rgb(var(--lc-muted)) 30%,
+    rgb(var(--lc-pink)) 50%,
+    rgb(var(--lc-muted)) 70%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: lc-gradient-shift 1.8s linear infinite;
+}

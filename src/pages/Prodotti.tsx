@@ -13,7 +13,7 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Package, Tags, Trash2, Clock, Mic } from 'lucide-react';
+import { Package, Tags, Trash2, Clock, Sparkles } from 'lucide-react';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { CreateProductByVoiceModal } from '@/components/CreateProductByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
@@ -46,8 +46,11 @@ export function Prodotti() {
           <SecondaryButton onClick={() => setManagingCategories(true)}>
             <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
           </SecondaryButton>
-          <SecondaryButton onClick={() => setCreatingByVoice(true)}>
-            <Mic size={16} className="mr-1 inline -mt-0.5" /> Racconta
+          <SecondaryButton
+            onClick={() => setCreatingByVoice(true)}
+            className="lc-ai-gradient border-transparent text-lc-accent-text"
+          >
+            <Sparkles size={16} className="mr-1 inline -mt-0.5" /> Racconta
           </SecondaryButton>
           <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
         </div>
