@@ -96,7 +96,7 @@ export function Clienti() {
   );
 }
 
-function CustomerForm({
+export function CustomerForm({
   open,
   onClose,
   onSave,
@@ -107,7 +107,7 @@ function CustomerForm({
   onClose: () => void;
   onSave: (data: Partial<Customer>) => void;
   onDelete?: () => void;
-  initial?: Customer;
+  initial?: Partial<Customer>;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [phone, setPhone] = useState(initial?.phone ?? '');

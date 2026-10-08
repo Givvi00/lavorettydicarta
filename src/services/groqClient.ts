@@ -44,8 +44,14 @@ export async function callGroqChat(prompt: string): Promise<string> {
   return content;
 }
 
-/** Trascrive un audio in testo tramite Whisper (Groq), in italiano. */
-export async function transcribeAudio(audio: Blob, filename = 'audio.webm'): Promise<string> {
+/** Trascrive un audio (vocale registrato nel browser) in testo tramite Whisper (Groq), in italiano. */
+export async function transcribeVoice(audio: Blob): Promise<string> {
+  const text = await transcribeAudio(audio);
+  if (!text) throw new Error('Non ho capito nulla: prova a registrare di nuovo, parlando con calma.');
+  return text;
+}
+
+async function transcribeAudio(audio: Blob, filename = 'audio.webm'): Promise<string> {
   const apiKey = await getApiKey();
   const form = new FormData();
   form.append('file', audio, filename);

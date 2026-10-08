@@ -1,6 +1,6 @@
 // Crea una bozza di prodotto a partire da un racconto libero (vocale trascritto o scritto):
 // "Faccio portachiavi in feltro, uso 10cm di feltro e un anellino, ci metto 15 minuti..."
-import { callGroqChat, extractJsonObject, transcribeAudio as transcribeAudioFile } from './groqClient';
+import { callGroqChat, extractJsonObject } from './groqClient';
 
 export interface DraftBomLine {
   rawText: string; // nome del materiale come detto/capito, prima dell'abbinamento al magazzino
@@ -33,12 +33,6 @@ null. In "designHours" metti le ore di progettazione del template (una tantum, n
 altrimenti null. In "salePrice" metti il prezzo di vendita in euro se viene detto esplicitamente, altrimenti null.
 Rispondi SOLO con un oggetto JSON valido, senza markdown, senza testo prima o dopo, in questo formato esatto:
 {"name": "nome prodotto", "description": "descrizione_o_null", "materials": [{"name": "nome materiale", "quantity": numero}], "productionHours": numero_o_null, "designHours": numero_o_null, "salePrice": numero_o_null}`;
-}
-
-export async function transcribeVoice(audio: Blob): Promise<string> {
-  const text = await transcribeAudioFile(audio);
-  if (!text) throw new Error('Non ho capito nulla: prova a registrare di nuovo, parlando con calma.');
-  return text;
 }
 
 export async function extractProductDraft(text: string): Promise<ProductDraft> {

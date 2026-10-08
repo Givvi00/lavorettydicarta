@@ -13,7 +13,8 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, Sparkles } from 'lucide-react';
+import { CreateOrderByVoiceModal } from '@/components/CreateOrderByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
 import { formatEUR, orderSubtotal, orderTotal, newId } from '@/utils/calc';
 import type { Order, OrderItem, OrderStatus } from '@/types';
@@ -40,6 +41,7 @@ export function Ordini() {
   const { orders, customers, products, upsertOrder, deleteOrder } = useStore();
   const [editing, setEditing] = useState<Order | null>(null);
   const [creating, setCreating] = useState(false);
+  const [creatingByVoice, setCreatingByVoice] = useState(false);
   const [filter, setFilter] = useState<OrderStatus | 'tutti'>('tutti');
 
   const filtered = orders.filter((o) => filter === 'tutti' || o.status === filter);
@@ -48,9 +50,18 @@ export function Ordini() {
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold md:text-2xl">Ordini &amp; preventivi</h1>
-        <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)} disabled={customers.length === 0}>
-          + Nuovo
-        </PrimaryButton>
+        <div className="flex gap-2">
+          <SecondaryButton
+            onClick={() => setCreatingByVoice(true)}
+            disabled={products.length === 0}
+            className="lc-ai-gradient border-transparent text-lc-accent-text"
+          >
+            <Sparkles size={16} className="mr-1 inline -mt-0.5" /> Racconta
+          </SecondaryButton>
+          <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)} disabled={customers.length === 0}>
+            + Nuovo
+          </PrimaryButton>
+        </div>
       </div>
       {customers.length === 0 && (
         <p className="text-sm text-lc-muted">Aggiungi prima un cliente per creare un ordine.</p>
@@ -122,6 +133,10 @@ export function Ordini() {
             setEditing(null);
           }}
         />
+      )}
+
+      {creatingByVoice && (
+        <CreateOrderByVoiceModal open={creatingByVoice} onClose={() => setCreatingByVoice(false)} />
       )}
     </div>
   );

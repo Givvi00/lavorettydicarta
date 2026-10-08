@@ -2,20 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { Loader2, Mic, Square, PlusCircle, Search, Keyboard, Sparkles } from 'lucide-react';
 import { Modal, Field, Input, Textarea, PrimaryButton, SecondaryButton, Select, Badge } from '@/components/ui/primitives';
 import { useStore } from '@/store/useStore';
-import { MaterialForm } from '@/pages/Materiali';
-import { extractProductDraft, type DraftBomLine } from '@/services/voiceProduct';
+import { CustomerForm } from '@/pages/Clienti';
+import { extractOrderDraft, type DraftOrderItem } from '@/services/voiceOrder';
 import { transcribeVoice } from '@/services/groqClient';
 import { bestMatch } from '@/utils/similarity';
-import type { BomLine } from '@/types';
+import { newId } from '@/utils/calc';
+import type { OrderItem } from '@/types';
 
 type Confidence = 'high' | 'medium' | 'low';
 
-interface ReviewRow {
-  line: DraftBomLine;
+interface ReviewItem {
+  line: DraftOrderItem;
   confidence: Confidence;
-  action: 'use' | 'created' | 'skip';
-  materialId: string;
-  quantity: number;
+  productId: string;
 }
 
 const HIGH_THRESHOLD = 0.5;
@@ -38,8 +37,8 @@ const CONFIDENCE_CARD: Record<Confidence, string> = {
   low: 'border-lc-danger/40 bg-lc-danger/5',
 };
 
-export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { materials, upsertMaterial, upsertProduct } = useStore();
+export function CreateOrderByVoiceModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { customers, products, upsertCustomer, upsertOrder } = useStore();
   const [step, setStep] = useState<'input' | 'loading' | 'review' | 'error'>('input');
   const [mode, setMode] = useState<'voice' | 'text'>('voice');
   const [recording, setRecording] = useState(false);
@@ -48,14 +47,14 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [creatingForRow, setCreatingForRow] = useState<number | null>(null);
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [productionHours, setProductionHours] = useState<number | undefined>(undefined);
-  const [designHours, setDesignHours] = useState<number | undefined>(undefined);
-  const [salePrice, setSalePrice] = useState<number | undefined>(undefined);
-  const [rows, setRows] = useState<ReviewRow[]>([]);
+  const [customerId, setCustomerId] = useState('');
+  const [customerConfidence, setCustomerConfidence] = useState<Confidence>('low');
+  const [customerNameHeard, setCustomerNameHeard] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [items, setItems] = useState<ReviewItem[]>([]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -138,49 +137,62 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
   }
 
   async function interpret(text: string) {
-    const draft = await extractProductDraft(text);
-    setName(draft.name);
-    setDescription(draft.description ?? '');
-    setProductionHours(draft.productionHours);
-    setDesignHours(draft.designHours);
-    setSalePrice(draft.salePrice);
-    setRows(
-      draft.bom.map((line) => {
-        const match = bestMatch(line.rawText, materials, (m) => m.name, 0);
+    const draft = await extractOrderDraft(text);
+
+    if (draft.customerName) {
+      const match = bestMatch(draft.customerName, customers, (c) => c.name, 0);
+      const confidence: Confidence =
+        match && match.score >= HIGH_THRESHOLD ? 'high' : match && match.score >= LOW_THRESHOLD ? 'medium' : 'low';
+      setCustomerNameHeard(draft.customerName);
+      setCustomerConfidence(confidence);
+      setCustomerId(confidence !== 'low' ? (match?.item.id ?? '') : '');
+    } else {
+      setCustomerNameHeard('');
+      setCustomerConfidence('low');
+      setCustomerId(customers[0]?.id ?? '');
+    }
+
+    setDeliveryDate(draft.deliveryDate ?? '');
+    setNotes(draft.notes ?? '');
+    setItems(
+      draft.items.map((line) => {
+        const match = bestMatch(line.productName, products, (p) => p.name, 0);
         const confidence: Confidence =
           match && match.score >= HIGH_THRESHOLD ? 'high' : match && match.score >= LOW_THRESHOLD ? 'medium' : 'low';
-        return {
-          line,
-          confidence,
-          action: confidence === 'low' ? 'skip' : 'use',
-          materialId: confidence !== 'low' ? (match?.item.id ?? '') : '',
-          quantity: line.quantity,
-        };
+        return { line, confidence, productId: confidence !== 'low' ? (match?.item.id ?? '') : '' };
       })
     );
     setStep('review');
   }
 
-  function updateRow(index: number, patch: Partial<ReviewRow>) {
-    setRows(rows.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+  function updateItem(index: number, productId: string) {
+    setItems(items.map((it, i) => (i === index ? { ...it, productId } : it)));
   }
 
   async function confirmAll() {
-    if (!name.trim()) return;
+    if (!customerId) return;
     setSaving(true);
     try {
-      const bom: BomLine[] = rows
-        .filter((r) => r.action !== 'skip' && r.materialId)
-        .map((r) => ({ materialId: r.materialId, quantity: r.quantity }));
-      await upsertProduct({
-        name: name.trim(),
-        type: 'personalizzabile',
-        salePrice: salePrice ?? 0,
-        productionHours,
-        designHours,
-        description: description || undefined,
-        active: true,
-        bom,
+      const orderItems: OrderItem[] = items
+        .filter((it) => it.productId)
+        .map((it) => {
+          const product = products.find((p) => p.id === it.productId);
+          return {
+            id: newId(),
+            productId: it.productId,
+            productName: product?.name ?? it.line.productName,
+            quantity: it.line.quantity,
+            unitPrice: product?.salePrice ?? 0,
+            customization: it.line.customization,
+          };
+        });
+      await upsertOrder({
+        customerId,
+        status: 'preventivo',
+        items: orderItems,
+        discount: 0,
+        deliveryDate: deliveryDate ? new Date(deliveryDate).getTime() : undefined,
+        notes: notes || undefined,
       });
       reset();
       onClose();
@@ -199,12 +211,12 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
     setTypedText('');
     setTranscript('');
     setError('');
-    setRows([]);
-    setName('');
-    setDescription('');
-    setProductionHours(undefined);
-    setDesignHours(undefined);
-    setSalePrice(undefined);
+    setCustomerId('');
+    setCustomerConfidence('low');
+    setCustomerNameHeard('');
+    setDeliveryDate('');
+    setNotes('');
+    setItems([]);
   }
 
   return (
@@ -214,15 +226,15 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
         reset();
         onClose();
       }}
-      title="Crea prodotto raccontandolo"
+      title="Crea ordine raccontandolo"
     >
       {step === 'input' && (
         <div className="flex flex-col items-center gap-4 py-6 text-center">
           {mode === 'voice' ? (
             <>
               <p className="flex items-center gap-1.5 text-sm text-lc-muted">
-                <Sparkles size={15} className="shrink-0 text-lc-pink" /> Racconta cosa fai per questo
-                prodotto: i materiali che usi, le quantità e quanto tempo ci metti. Capisco io il resto.
+                <Sparkles size={15} className="shrink-0 text-lc-pink" /> Racconta l'ordine: per chi è, cosa
+                vuole, quante copie, personalizzazioni e quando deve essere pronto.
               </p>
               <div className="relative flex h-24 w-24 items-center justify-center">
                 {recording && (
@@ -257,7 +269,8 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
           ) : (
             <>
               <p className="text-sm text-lc-muted">
-                Scrivi cosa fai per questo prodotto: i materiali che usi, le quantità e quanto tempo ci metti.
+                Scrivi l'ordine: per chi è, cosa vuole, quante copie, personalizzazioni e quando deve essere
+                pronto.
               </p>
               <Textarea
                 className="w-full"
@@ -265,7 +278,7 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
                 autoFocus
                 value={typedText}
                 onChange={(e) => setTypedText(e.target.value)}
-                placeholder='Es. "Faccio portachiavi in feltro: 10cm di feltro rosa e un anellino, ci metto 15 minuti, lo vendo a 5 euro"'
+                placeholder='Es. "Ordine per Giulia: due portachiavi con il nome Sofia, consegna entro venerdì"'
               />
               <div className="flex w-full items-center justify-between">
                 <button
@@ -295,7 +308,7 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
             <Loader2 size={24} className="animate-spin text-lc-accent-text" />
           </div>
           <p className="font-display text-sm font-semibold lc-ai-shimmer-text">
-            {transcript ? 'Capisco cosa serve per il prodotto...' : 'Ascolto e trascrivo...'}
+            {transcript ? "Capisco i dettagli dell'ordine..." : 'Ascolto e trascrivo...'}
           </p>
         </div>
       )}
@@ -315,134 +328,103 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
             </p>
           )}
 
-          <Field label="Nome prodotto">
-            <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Prezzo di vendita (€)">
-              <Input
-                type="number"
-                step="0.01"
-                value={salePrice ?? 0}
-                onChange={(e) => setSalePrice(parseFloat(e.target.value) || 0)}
-              />
-            </Field>
-            <Field label="Ore produzione per pezzo">
-              <Input
-                type="number"
-                step="0.1"
-                value={productionHours ?? 0}
-                onChange={(e) => setProductionHours(parseFloat(e.target.value) || 0)}
-              />
-            </Field>
+          <div className={`flex flex-col gap-2 rounded-btn border p-2 ${CONFIDENCE_CARD[customerConfidence]}`}>
+            <div className="flex items-center justify-between gap-2">
+              <Field label="Cliente">
+                <div className="flex items-center gap-1.5">
+                  <Search size={14} className="shrink-0 text-lc-muted" />
+                  <Select className="flex-1" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
+                    <option value="">Scegli cliente...</option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </Field>
+              {customerNameHeard && <Badge tone={CONFIDENCE_TONE[customerConfidence]}>{CONFIDENCE_LABEL[customerConfidence]}</Badge>}
+            </div>
+            {customerNameHeard && (
+              <p className="text-xs text-lc-muted">
+                Detto: <span className="italic">"{customerNameHeard}"</span>
+              </p>
+            )}
+            {!customerId && (
+              <SecondaryButton type="button" className="self-start text-xs" onClick={() => setCreatingCustomer(true)}>
+                <PlusCircle size={14} className="mr-1 inline -mt-0.5" /> Crea nuovo cliente
+              </SecondaryButton>
+            )}
           </div>
-          <Field label="Descrizione">
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+
+          <Field label="Data di consegna">
+            <Input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
           </Field>
 
-          {rows.length > 0 && (
+          {items.length > 0 && (
             <>
               <p className="text-sm text-lc-muted">
-                Materiali usati —{' '}
+                Articoli —{' '}
                 <Badge tone="success">verde</Badge> trovato automaticamente ·{' '}
                 <Badge tone="accent">arancione</Badge> verifica tu ·{' '}
                 <Badge tone="danger">rosso</Badge> nessuna corrispondenza
               </p>
               <div className="flex flex-col gap-3">
-                {rows.map((row, i) => {
-                  const matchedMaterial = materials.find((m) => m.id === row.materialId);
-                  return (
-                    <div key={i} className={`flex flex-col gap-2 rounded-btn border p-2 ${CONFIDENCE_CARD[row.confidence]}`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <Badge tone={CONFIDENCE_TONE[row.confidence]}>{CONFIDENCE_LABEL[row.confidence]}</Badge>
-                        <p className="text-xs text-lc-muted">
-                          Detto: <span className="italic">"{row.line.rawText}"</span>
-                        </p>
-                      </div>
-
-                      {row.action === 'created' ? (
-                        <p className="text-sm font-semibold text-lc-success">
-                          ✓ Creato: {matchedMaterial?.name ?? row.line.rawText}
-                        </p>
-                      ) : row.action === 'skip' ? (
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-lc-muted">Non incluso nella distinta base.</p>
-                          <SecondaryButton
-                            type="button"
-                            className="px-2 py-1 text-xs"
-                            onClick={() => updateRow(i, { action: 'use' })}
-                          >
-                            Includi comunque
-                          </SecondaryButton>
-                        </div>
-                      ) : (
-                        <>
-                          <Field label="Associa a materiale esistente">
-                            <div className="flex items-center gap-1.5">
-                              <Search size={14} className="shrink-0 text-lc-muted" />
-                              <Select
-                                className="flex-1"
-                                value={row.materialId}
-                                onChange={(e) => updateRow(i, { materialId: e.target.value })}
-                              >
-                                <option value="">Scegli materiale...</option>
-                                {materials.map((m) => (
-                                  <option key={m.id} value={m.id}>
-                                    {m.name}
-                                  </option>
-                                ))}
-                              </Select>
-                            </div>
-                          </Field>
-                          <Field label="Quantità per pezzo">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={row.quantity}
-                              onChange={(e) => updateRow(i, { quantity: parseFloat(e.target.value) || 0 })}
-                              className="w-24"
-                            />
-                          </Field>
-                          <SecondaryButton type="button" className="text-xs" onClick={() => setCreatingForRow(i)}>
-                            <PlusCircle size={14} className="mr-1 inline -mt-0.5" /> Crea nuovo materiale
-                          </SecondaryButton>
-                          <button
-                            type="button"
-                            onClick={() => updateRow(i, { action: 'skip', materialId: '' })}
-                            className="self-end text-xs font-semibold text-lc-muted underline"
-                          >
-                            Non includerlo
-                          </button>
-                        </>
-                      )}
+                {items.map((it, i) => (
+                  <div key={i} className={`flex flex-col gap-2 rounded-btn border p-2 ${CONFIDENCE_CARD[it.confidence]}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge tone={CONFIDENCE_TONE[it.confidence]}>{CONFIDENCE_LABEL[it.confidence]}</Badge>
+                      <p className="text-xs text-lc-muted">
+                        Detto: <span className="italic">"{it.line.productName}"</span> × {it.line.quantity}
+                      </p>
                     </div>
-                  );
-                })}
+                    <Field label="Prodotto">
+                      <Select value={it.productId} onChange={(e) => updateItem(i, e.target.value)}>
+                        <option value="">Scegli prodotto...</option>
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    {it.line.customization && (
+                      <p className="text-xs text-lc-muted">Personalizzazione: {it.line.customization}</p>
+                    )}
+                    {it.confidence === 'low' && !it.productId && (
+                      <p className="text-xs text-lc-muted">
+                        Nessun prodotto simile in catalogo: scegline uno tu, oppure crealo prima da "Racconta"
+                        in Prodotti.
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             </>
           )}
+
+          <Field label="Note">
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          </Field>
 
           <div className="mt-2 flex items-center justify-between">
             <SecondaryButton type="button" onClick={reset}>
               Annulla
             </SecondaryButton>
-            <PrimaryButton type="button" onClick={confirmAll} disabled={saving || !name.trim()}>
-              {saving ? 'Salvo...' : 'Crea prodotto'}
+            <PrimaryButton type="button" onClick={confirmAll} disabled={saving || !customerId}>
+              {saving ? 'Salvo...' : 'Crea ordine'}
             </PrimaryButton>
           </div>
 
-          {creatingForRow != null && (
-            <MaterialForm
+          {creatingCustomer && (
+            <CustomerForm
               open={true}
-              initial={{
-                name: rows[creatingForRow].line.rawText,
-                unit: 'pz',
-              }}
-              onClose={() => setCreatingForRow(null)}
+              initial={{ name: customerNameHeard }}
+              onClose={() => setCreatingCustomer(false)}
               onSave={async (data) => {
-                const created = await upsertMaterial(data);
-                updateRow(creatingForRow, { action: 'created', materialId: created.id });
-                setCreatingForRow(null);
+                const created = await upsertCustomer(data);
+                setCustomerId(created.id);
+                setCreatingCustomer(false);
               }}
             />
           )}
