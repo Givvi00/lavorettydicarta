@@ -7,7 +7,6 @@ export default {
       fontFamily: {
         display: ['Fredoka', 'system-ui', 'sans-serif'],
         sans: ['Nunito', 'system-ui', 'sans-serif'],
-        hand: ['Caveat', 'Fredoka', 'cursive'],
       },
       colors: {
         lc: {

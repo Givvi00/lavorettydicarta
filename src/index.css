@@ -4,7 +4,7 @@
 
 :root {
   /* Brand: giallo Lavoretty di Carta, su carta color crema, con pastelli da washi tape */
-  --lc-bg: 253 247 233;
+  --lc-bg: 255 251 240;
   --lc-surface: 255 252 244;
   --lc-card: 255 254 250;
   --lc-border: 238 223 184;
@@ -24,7 +24,7 @@
 }
 
 :root.dark {
-  --lc-bg: 27 22 15;
+  --lc-bg: 28 24 16;
   --lc-surface: 37 31 20;
   --lc-card: 45 38 25;
   --lc-border: 66 55 34;
@@ -51,37 +51,15 @@ body,
 
 body {
   margin: 0;
-  background-color: rgb(var(--lc-bg));
-  /* macchie di colore morbide, fisse, dietro a tutto: danno profondità senza appesantire */
-  background-image:
-    radial-gradient(52rem 36rem at 92% -8%, rgb(var(--lc-accent) / 0.22), transparent 62%),
-    radial-gradient(44rem 32rem at -8% 22%, rgb(var(--lc-pink) / 0.14), transparent 62%),
-    radial-gradient(40rem 30rem at 62% 112%, rgb(var(--lc-sky) / 0.14), transparent 62%);
-  background-attachment: fixed;
+  background: rgb(var(--lc-bg));
   color: rgb(var(--lc-text));
   font-family: 'Nunito', system-ui, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
 
-/* grana di carta, leggerissima, sopra lo sfondo */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.045;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 .font-display {
   font-family: 'Fredoka', system-ui, sans-serif;
-}
-
-/* scritta a mano, per i dettagli "da quaderno" */
-.font-hand {
-  font-family: 'Caveat', 'Fredoka', cursive;
 }
 
 /* evidenziatore giallo sotto una parte del titolo */
@@ -127,14 +105,6 @@ body::before {
   border: 3px solid rgb(var(--lc-card));
   box-shadow: 0 3px 8px -2px rgb(0 0 0 / 0.22);
   transform: rotate(-6deg);
-}
-
-@keyframes lc-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(6deg); }
-}
-.lc-float {
-  animation: lc-float 3.6s ease-in-out infinite;
 }
 
 /* chi preferisce meno movimento non vede animazioni continue */

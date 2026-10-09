@@ -103,7 +103,7 @@ function App() {
           <img src={logo} alt="Lavoretty di Carta" className="lc-sticker h-11 w-11 rounded-2xl" />
           <div className="leading-tight">
             <p className="font-display text-sm font-semibold">Lavoretty di Carta</p>
-            <p className="font-hand text-lg leading-none text-lc-olive">il tuo angolo creativo</p>
+            <p className="text-[11px] font-semibold text-lc-muted">angolo creativo ✂️</p>
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-1.5 p-3">
@@ -163,7 +163,7 @@ function App() {
               <h1 className="font-display text-lg font-semibold leading-tight text-lc-accent-ink">
                 Lavoretty di Carta
               </h1>
-              <p className="font-hand text-lg leading-none text-lc-accent-ink/80">il tuo angolo creativo ✨</p>
+              <p className="text-xs font-semibold text-lc-accent-ink/70">il tuo angolo creativo ✂️✨</p>
             </div>
             <button
               data-tour="btn-impostazioni"

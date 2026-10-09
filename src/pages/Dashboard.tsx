@@ -8,7 +8,6 @@ import {
   ShoppingBag,
   Wallet,
   Scissors,
-  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -32,27 +31,14 @@ interface StatTile {
   icon: LucideIcon;
   tape: TapeColor;
   sticker: string; // colore di sfondo dell'icona
-  hint?: string;
   span?: string; // classi di larghezza nella griglia
   hero?: boolean;
 }
 
 function Stat({ tile, index }: { tile: StatTile; index: number }) {
-  const { label, value, icon: Icon, tape, sticker, hint, span = '', hero } = tile;
+  const { label, value, icon: Icon, tape, sticker, span = '', hero } = tile;
   return (
-    <Card
-      tape={tape}
-      lift
-      className={`animate-pop-in ${span} ${
-        hero ? 'bg-gradient-to-br from-lc-accent/35 via-lc-card to-lc-peach/30' : ''
-      }`}
-      style={{ animationDelay: `${index * 70}ms` }}
-    >
-      {hero && (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-card">
-          <Sparkles aria-hidden size={64} className="lc-float absolute -right-3 -top-3 text-lc-accent/40" />
-        </div>
-      )}
+    <Card tape={tape} lift className={`animate-pop-in ${span}`} style={{ animationDelay: `${index * 70}ms` }}>
       <div
         className={`relative flex ${
           hero
@@ -74,7 +60,6 @@ function Stat({ tile, index }: { tile: StatTile; index: number }) {
           <p className={`font-display font-semibold leading-tight ${hero ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl'}`}>
             {value}
           </p>
-          {hint && <p className="font-hand text-lg leading-none text-lc-olive">{hint}</p>}
         </div>
       </div>
     </Card>
@@ -101,7 +86,6 @@ export function Dashboard() {
   const revenueThisMonth = ordersThisMonth.reduce((sum, o) => sum + orderTotal(o), 0);
 
   const monthName = new Date().toLocaleDateString('it-IT', { month: 'long' });
-  const today = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const tiles: StatTile[] = [
     { label: 'Ordini totali', value: revenueOrders.length, icon: ShoppingBag, tape: 'yellow', sticker: 'bg-lc-accent' },
@@ -114,7 +98,6 @@ export function Dashboard() {
       icon: Euro,
       tape: 'peach',
       sticker: 'bg-lc-peach',
-      hint: `${ordersThisMonth.length} ordin${ordersThisMonth.length === 1 ? 'e' : 'i'} questo mese`,
       span: 'col-span-2 md:col-span-3',
       hero: true,
     },
@@ -123,15 +106,12 @@ export function Dashboard() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex flex-wrap items-end justify-between gap-x-4">
-        <div>
-          <h1 className="font-display text-2xl font-semibold md:text-3xl">
-            {greeting()}, <span className="lc-marker">{GIRL_NAME}</span>!{' '}
-            <span className="inline-block animate-wiggle">✂️</span>
-          </h1>
-          <p className="font-hand text-xl leading-tight text-lc-muted">Ecco come va il tuo angolo creativo oggi.</p>
-        </div>
-        <p className="font-hand text-xl leading-none text-lc-olive first-letter:uppercase">{today}</p>
+      <div>
+        <h1 className="font-display text-2xl font-semibold md:text-3xl">
+          {greeting()}, <span className="lc-marker">{GIRL_NAME}</span>!{' '}
+          <span className="inline-block animate-wiggle">✂️</span>
+        </h1>
+        <p className="text-sm text-lc-muted">Ecco come va il tuo angolo creativo oggi.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -180,7 +160,7 @@ export function Dashboard() {
         )}
 
         <Card tape="yellow">
-          <p className="mb-2 font-hand text-2xl leading-none">Ultimi ordini</p>
+          <p className="mb-2 font-display font-semibold">Ultimi ordini</p>
           {recentOrders.length === 0 ? (
             <EmptyState icon={<Scissors />} text="Ancora nessun ordine: creane uno dalla scheda Ordini!" />
           ) : (
@@ -203,7 +183,7 @@ export function Dashboard() {
         </Card>
       </div>
 
-      <p className="text-center font-hand text-xl text-lc-muted">
+      <p className="text-center text-xs text-lc-muted">
         {products.length} prodott{products.length === 1 ? 'o' : 'i'} in catalogo · fatto con 🧡 per te
       </p>
     </div>
