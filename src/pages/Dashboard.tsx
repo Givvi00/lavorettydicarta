@@ -76,6 +76,8 @@ export function Dashboard() {
   const quotes = orders.filter((o) => o.status === 'preventivo');
   const lowStock = materials.filter((m) => m.minStock != null && m.stockQty <= m.minStock);
   const shoppingList = aggregateMaterialShortfalls(orders, products, materials);
+  // un solo avviso occupa tutta la riga, due avvisi stanno affiancati
+  const alertSpan = [shoppingList.length, lowStock.length].filter((n) => n > 0).length === 1 ? 'md:col-span-2' : '';
   const revenueOrders = orders.filter(countsAsRevenue);
   const totalRevenue = revenueOrders.reduce((sum, o) => sum + orderTotal(o), 0);
   const ordersThisMonth = revenueOrders.filter((o) => {
@@ -124,7 +126,7 @@ export function Dashboard() {
 
       <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start md:gap-5">
         {shoppingList.length > 0 && (
-          <Card tape="pink" className="border-lc-danger/30">
+          <Card tape="pink" className={`border-lc-danger/30 ${alertSpan}`}>
             <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">
               <ShoppingCart size={16} /> Da comprare per gli ordini in corso
             </p>
@@ -142,7 +144,7 @@ export function Dashboard() {
         )}
 
         {lowStock.length > 0 && (
-          <Card tape="peach" className="border-lc-danger/30">
+          <Card tape="peach" className={`border-lc-danger/30 ${alertSpan}`}>
             <p className="mb-2 flex items-center gap-1.5 font-display font-semibold text-lc-danger">
               <AlertTriangle size={16} /> Materiali sotto scorta
             </p>
@@ -159,7 +161,7 @@ export function Dashboard() {
           </Card>
         )}
 
-        <Card tape="yellow">
+        <Card className="md:col-span-2">
           <p className="mb-2 font-display font-semibold">Ultimi ordini</p>
           {recentOrders.length === 0 ? (
             <EmptyState icon={<Scissors />} text="Ancora nessun ordine: creane uno dalla scheda Ordini!" />

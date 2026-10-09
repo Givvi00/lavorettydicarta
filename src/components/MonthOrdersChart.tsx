@@ -44,7 +44,7 @@ export function MonthOrdersChart({ orders }: { orders: Order[] }) {
       : `${ordersLabel(monthCount)} nel mese · ${formatEUR(monthTotal)}`;
 
   return (
-    <Card tape="mint" className="flex flex-col gap-3">
+    <Card className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
         <p className="font-display font-semibold">Ordini del mese</p>
         <p className="text-xs font-semibold capitalize text-lc-muted">{monthName}</p>
