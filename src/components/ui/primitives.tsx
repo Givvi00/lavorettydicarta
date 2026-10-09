@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -131,9 +131,27 @@ export function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
   );
 }
 
+// Valori attuali di tutti i campi dentro la finestra, per capire se l'utente ha cambiato qualcosa.
+function snapshotFields(root: HTMLElement | null): string {
+  if (!root) return '';
+  const values: string[] = [];
+  root.querySelectorAll('input, textarea, select, img').forEach((el) => {
+    if (el instanceof HTMLInputElement) {
+      if (el.type === 'file') return;
+      values.push(el.type === 'checkbox' || el.type === 'radio' ? String(el.checked) : el.value);
+    } else if (el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
+      values.push(el.value);
+    } else if (el instanceof HTMLImageElement) {
+      values.push(el.src);
+    }
+  });
+  return JSON.stringify(values);
+}
+
 // Si esce solo con la ✕ (mai cliccando fuori, per non perdere per sbaglio quello che si sta compilando).
-// Con confirmClose (default) la ✕ chiede prima conferma; il contenuto resta montato sotto, quindi
-// scegliendo "Continua" non si perde nulla. Passa confirmClose={false} dove non c'è nulla da perdere.
+// Con confirmClose (default) la ✕ chiede conferma, ma solo se i campi sono cambiati rispetto a quando la
+// finestra si è aperta: se non è stato modificato nulla si chiude subito. Il contenuto resta montato sotto,
+// quindi scegliendo "Continua" non si perde nulla. Passa confirmClose={false} dove non c'è mai nulla da perdere.
 export function Modal({
   open,
   onClose,
@@ -148,10 +166,18 @@ export function Modal({
   confirmClose?: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const baseline = useRef<string | null>(null);
+
+  useEffect(() => {
+    baseline.current = open ? snapshotFields(panelRef.current) : null;
+  }, [open]);
+
   if (!open) return null;
 
   function requestClose() {
-    if (confirmClose) setConfirming(true);
+    const unchanged = baseline.current !== null && snapshotFields(panelRef.current) === baseline.current;
+    if (confirmClose && !unchanged) setConfirming(true);
     else onClose();
   }
 
@@ -160,7 +186,7 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-end justify-center bg-lc-accent-ink/50 backdrop-blur-[2px] sm:items-center"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="lc-scroll max-h-[90svh] w-full max-w-lg animate-slide-up overflow-y-auto rounded-t-card border-2 border-lc-border bg-lc-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-soft sm:rounded-card sm:animate-pop-in">
+      <div ref={panelRef} className="lc-scroll max-h-[90svh] w-full max-w-lg animate-slide-up overflow-y-auto rounded-t-card border-2 border-lc-border bg-lc-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-soft sm:rounded-card sm:animate-pop-in">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">{title}</h2>
           <button

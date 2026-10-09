@@ -177,7 +177,7 @@ function App() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-24 md:pb-6">
+        <main className="lc-scroll flex-1 overflow-y-auto pb-24 md:pb-6">
           <div className="mx-auto w-full max-w-6xl">
             <Suspense fallback={<div className="p-4 text-lc-muted">Caricamento...</div>}>
               {tab === 'dashboard' && <Dashboard />}
