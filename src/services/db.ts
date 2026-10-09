@@ -1,5 +1,5 @@
-// Dati del gestionale salvati su Supabase (database condiviso), non piu' solo nel browser:
-// cosi' sono persistenti davvero e visibili da chiunque sia autorizzato, su qualsiasi dispositivo.
+// Dati del gestionale salvati su Supabase (database condiviso), non più solo nel browser:
+// così sono persistenti davvero e visibili da chiunque sia autorizzato, su qualsiasi dispositivo.
 import { getClient } from './account';
 import type { Customer, Material, Product, Order, Category } from '../types';
 

@@ -16,7 +16,7 @@ const STEPS: TourStep[] = [
   {
     title: 'Ciao! 👋',
     text:
-      'Ti faccio fare un giro veloce di Lavoretty di Carta, cosi\' vedi dove trovare le cose. Clicca sui pulsanti evidenziati per andare avanti.',
+      'Ti faccio fare un giro veloce di Lavoretty di Carta, così vedi dove trovare le cose. Clicca sui pulsanti evidenziati per andare avanti.',
   },
   {
     target: 'nav-clienti',
@@ -28,7 +28,7 @@ const STEPS: TourStep[] = [
     target: 'btn-nuovo',
     type: 'highlight',
     title: 'Aggiungi',
-    text: 'Con "+ Nuovo" aggiungi un nuovo elemento: funziona cosi\' in ogni sezione (clienti, materiali, prodotti, ordini). Clicca per continuare.',
+    text: 'Con "+ Nuovo" aggiungi un nuovo elemento: funziona così in ogni sezione (clienti, materiali, prodotti, ordini). Clicca per continuare.',
   },
   {
     target: 'nav-materiali',
