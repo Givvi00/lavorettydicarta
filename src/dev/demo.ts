@@ -29,7 +29,7 @@ const customers: Customer[] = [
   { id: 'c2', name: 'Marco Bianchi', phone: '347 7654321', email: 'marco@example.com', ...stamp },
   { id: 'c3', name: 'Sofia Verdi', phone: '320 1112233', instagram: '@sofiaverdi', ...stamp },
   { id: 'c4', name: 'Elena Neri', phone: '339 4445566', ...stamp },
-  { id: 'c5', name: 'Chiara Galli', email: 'chiara@example.com', ...stamp },
+  { id: 'c5', name: 'Chiara Galli', phone: '3270946087', email: 'chiara.galli.creativa99@example.com', ...stamp },
 ];
 
 const materials: Material[] = [

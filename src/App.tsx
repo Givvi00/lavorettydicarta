@@ -153,9 +153,9 @@ function App() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Header: solo su mobile, la sidebar lo sostituisce da md in su */}
-        <header className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-br from-lc-accent via-lc-accent to-lc-peach px-4 pb-5 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-soft md:hidden">
+        <header className="relative mx-3 mt-[calc(0.5rem+env(safe-area-inset-top))] shrink-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-lc-accent via-lc-accent to-lc-peach px-4 py-3.5 shadow-soft md:hidden">
           <div className="lc-paper-bg pointer-events-none absolute inset-0 opacity-40" />
           <div className="relative flex items-center gap-3">
             <img src={logo} alt="Lavoretty di Carta" className="lc-sticker h-12 w-12 rounded-2xl" />
@@ -184,7 +184,7 @@ function App() {
           </div>
         </header>
 
-        <main className="lc-scroll flex-1 overflow-y-auto pb-28 md:pb-6">
+        <main className="lc-scroll min-h-0 flex-1 overflow-y-auto pb-4 md:pb-6">
           <div className="mx-auto w-full max-w-6xl">
             <Suspense fallback={<div className="p-4 text-lc-muted">Caricamento...</div>}>
               {tab === 'dashboard' && <Dashboard />}
@@ -196,8 +196,8 @@ function App() {
           </div>
         </main>
 
-        {/* Barra di navigazione fluttuante: solo su mobile */}
-        <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 flex gap-1 rounded-blob border-2 border-lc-border bg-lc-surface/85 p-1.5 shadow-soft backdrop-blur md:hidden">
+        {/* Barra di navigazione a pillola sotto l'area scorrevole (non sopra): solo su mobile */}
+        <nav className="mx-3 mb-[calc(0.75rem+env(safe-area-inset-bottom))] flex shrink-0 gap-1 rounded-blob border-2 border-lc-border bg-lc-surface p-1.5 shadow-soft md:hidden">
           {TABS.map(({ id, label, icon: Icon }) => {
             const active = tab === id;
             return (

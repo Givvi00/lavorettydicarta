@@ -40,19 +40,19 @@ export function Prodotti() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Prodotti</span></h1>
-        <div className="flex gap-2">
-          <SecondaryButton onClick={() => setManagingCategories(true)}>
+        <div className="flex flex-wrap gap-2">
+          <SecondaryButton className="!px-3 sm:!px-5" onClick={() => setManagingCategories(true)}>
             <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
           </SecondaryButton>
           <SecondaryButton
             onClick={() => setCreatingByVoice(true)}
-            className="lc-ai-gradient border-transparent text-lc-accent-text"
+            className="lc-ai-gradient border-transparent !px-3 text-lc-accent-text sm:!px-5"
           >
             <Sparkles size={16} className="mr-1 inline -mt-0.5" /> Racconta
           </SecondaryButton>
-          <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+          <PrimaryButton className="!px-3 sm:!px-5" data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export function Prodotti() {
           const margin = marginOf(p, materials);
           return (
             <Card key={p.id} lift className="flex items-center gap-3">
-              <div onClick={() => setEditing(p)} className="flex flex-1 cursor-pointer items-center gap-3 text-left">
+              <div onClick={() => setEditing(p)} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left">
                 {p.photo ? (
                   <img src={p.photo} alt="" className="h-11 w-11 shrink-0 rounded-btn object-cover" />
                 ) : (
@@ -94,7 +94,7 @@ export function Prodotti() {
                     <Package size={18} />
                   </span>
                 )}
-                <div>
+                <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="font-semibold">{p.name}</p>
                   {p.category && <Badge tone="pink">{p.category}</Badge>}
@@ -111,7 +111,7 @@ export function Prodotti() {
                 </p>
                 </div>
               </div>
-              <SecondaryButton onClick={() => setEditing(p)}>Modifica</SecondaryButton>
+              <SecondaryButton className="shrink-0" onClick={() => setEditing(p)}>Modifica</SecondaryButton>
             </Card>
           );
         })}

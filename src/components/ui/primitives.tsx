@@ -45,7 +45,7 @@ export function PrimaryButton({
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`rounded-blob bg-lc-accent px-5 py-2.5 font-display font-semibold text-lc-accent-text shadow-press ring-1 ring-inset ring-white/40 transition-[transform,filter,box-shadow] hover:brightness-105 active:shadow-press-down active:translate-y-[3px] disabled:opacity-50 disabled:active:translate-y-0 ${className}`}
+      className={`whitespace-nowrap rounded-blob bg-lc-accent px-4 py-2.5 font-display sm:px-5 font-semibold text-lc-accent-text shadow-press ring-1 ring-inset ring-white/40 transition-[transform,filter,box-shadow] hover:brightness-105 active:shadow-press-down active:translate-y-[3px] disabled:opacity-50 disabled:active:translate-y-0 ${className}`}
       {...props}
     >
       {children}
@@ -60,7 +60,7 @@ export function SecondaryButton({
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`rounded-blob border-2 border-lc-border bg-lc-surface px-5 py-2.5 font-display font-semibold text-lc-text transition-[transform,border-color] hover:border-lc-accent active:translate-y-0.5 disabled:opacity-50 ${className}`}
+      className={`whitespace-nowrap rounded-blob border-2 border-lc-border bg-lc-surface px-4 py-2.5 font-display sm:px-5 font-semibold text-lc-text transition-[transform,border-color] hover:border-lc-accent active:translate-y-0.5 disabled:opacity-50 ${className}`}
       {...props}
     >
       {children}
@@ -75,7 +75,7 @@ export function DangerButton({
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`rounded-blob bg-lc-danger px-5 py-2.5 font-display font-semibold text-white transition-transform active:translate-y-0.5 disabled:opacity-50 ${className}`}
+      className={`whitespace-nowrap rounded-blob bg-lc-danger px-4 py-2.5 font-display sm:px-5 font-semibold text-white transition-transform active:translate-y-0.5 disabled:opacity-50 ${className}`}
       {...props}
     >
       {children}

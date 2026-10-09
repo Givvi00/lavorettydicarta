@@ -30,9 +30,9 @@ export function Materiali() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Materiali</span></h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <SecondaryButton data-tour="btn-scontrino" onClick={() => setScanning(true)}>
             <Receipt size={16} className="mr-1 inline -mt-0.5" /> Scontrino
           </SecondaryButton>
@@ -73,7 +73,7 @@ export function Materiali() {
           const low = m.minStock != null && m.stockQty <= m.minStock;
           return (
             <Card key={m.id} lift className="flex items-center gap-3">
-              <div onClick={() => setEditing(m)} className="flex flex-1 cursor-pointer items-center gap-3 text-left">
+              <div onClick={() => setEditing(m)} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left">
                 {m.photo ? (
                   <img src={m.photo} alt="" className="h-11 w-11 shrink-0 rounded-btn object-cover" />
                 ) : (
@@ -81,8 +81,8 @@ export function Materiali() {
                     <Boxes size={18} />
                   </span>
                 )}
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{m.name}</p>
                     {low && <Badge tone="danger">scorta bassa</Badge>}
                   </div>

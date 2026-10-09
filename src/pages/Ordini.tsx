@@ -48,9 +48,9 @@ export function Ordini() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Ordini</span> &amp; preventivi</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <SecondaryButton
             onClick={() => setCreatingByVoice(true)}
             disabled={products.length === 0}
@@ -88,8 +88,8 @@ export function Ordini() {
           const customer = customers.find((c) => c.id === o.customerId);
           return (
             <Card key={o.id} lift className="flex items-center justify-between">
-              <div onClick={() => setEditing(o)} className="flex-1 cursor-pointer text-left">
-                <div className="flex items-center gap-2">
+              <div onClick={() => setEditing(o)} className="min-w-0 flex-1 cursor-pointer text-left">
+                <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold">{customer?.name ?? 'Cliente sconosciuto'}</p>
                   <Badge tone={STATUS_TONE[o.status]}>{STATUS_LABEL[o.status]}</Badge>
                 </div>
@@ -98,7 +98,7 @@ export function Ordini() {
                   {o.deliveryDate ? ` · consegna ${new Date(o.deliveryDate).toLocaleDateString('it-IT')}` : ''}
                 </p>
               </div>
-              <SecondaryButton onClick={() => setEditing(o)}>Apri</SecondaryButton>
+              <SecondaryButton className="shrink-0" onClick={() => setEditing(o)}>Apri</SecondaryButton>
             </Card>
           );
         })}

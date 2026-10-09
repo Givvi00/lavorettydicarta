@@ -35,13 +35,13 @@ export function Clienti() {
           const wa = toWhatsAppLink(c.phone);
           return (
             <Card key={c.id} lift className="flex items-center justify-between gap-2">
-              <div onClick={() => setEditing(c)} className="flex flex-1 cursor-pointer items-center gap-3 text-left">
+              <div onClick={() => setEditing(c)} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
                   {c.name.slice(0, 1).toUpperCase()}
                 </span>
-                <div>
+                <div className="min-w-0">
                   <p className="font-semibold">{c.name}</p>
-                  <p className="text-sm text-lc-muted">
+                  <p className="break-words text-sm text-lc-muted">
                     {[c.phone, c.email].filter(Boolean).join(' · ') || 'Nessun contatto'}
                   </p>
                 </div>
