@@ -115,6 +115,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
         onClose();
       }}
       title="Scansiona scontrino"
+      confirmClose={step === 'review' || step === 'loading'}
     >
       {step === 'pick' && (
         <div className="flex flex-col items-center gap-4 py-6 text-center">
@@ -228,10 +229,7 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
             })}
           </div>
 
-          <div className="mt-2 flex items-center justify-between">
-            <SecondaryButton type="button" onClick={reset}>
-              Annulla
-            </SecondaryButton>
+          <div className="mt-2 flex items-center justify-end">
             <PrimaryButton type="button" onClick={confirmAll} disabled={saving}>
               {saving ? 'Salvo...' : 'Conferma e salva'}
             </PrimaryButton>

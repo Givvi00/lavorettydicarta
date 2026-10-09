@@ -15,7 +15,7 @@ import {
 import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart } from 'lucide-react';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { ScanReceiptModal } from '@/components/ScanReceiptModal';
-import { formatEUR, aggregateMaterialShortfalls } from '@/utils/calc';
+import { formatEUR, aggregateMaterialShortfalls, effectiveUnitCost } from '@/utils/calc';
 import type { Material } from '@/types';
 
 export function Materiali() {
@@ -87,7 +87,7 @@ export function Materiali() {
                     {low && <Badge tone="danger">scorta bassa</Badge>}
                   </div>
                   <p className="text-sm text-lc-muted">
-                    {m.stockQty} {m.unit} disponibili · {formatEUR(m.unitCost)}/{m.unit}
+                    {m.stockQty} {m.unit} disponibili · {formatEUR(effectiveUnitCost(m))}/{m.unit}
                     {m.supplier ? ` · ${m.supplier}` : ''}
                   </p>
                   {m.packageQty && m.packagePrice ? (
@@ -174,7 +174,8 @@ export function MaterialForm({
   const [purchaseUrl, setPurchaseUrl] = useState(initial?.purchaseUrl ?? '');
   const [photo, setPhoto] = useState(initial?.photo ?? '');
 
-  const costPerUnitFromPackage = packageQty > 0 && packagePrice > 0 ? packagePrice / packageQty : null;
+  const costPerUnitFromPackage =
+    packageQty > 0 && packagePrice > 0 ? Math.round((packagePrice / packageQty) * 10000) / 10000 : null;
 
   return (
     <Modal open={open} onClose={onClose} title={initial?.id ? 'Modifica materiale' : 'Nuovo materiale'}>
@@ -186,7 +187,7 @@ export function MaterialForm({
           onSave({
             name: name.trim(),
             unit,
-            unitCost,
+            unitCost: costPerUnitFromPackage ?? unitCost,
             supplier,
             stockQty,
             minStock,
@@ -207,11 +208,12 @@ export function MaterialForm({
           <Field label="Unità di misura">
             <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="pz, foglio, metro..." />
           </Field>
-          <Field label="Costo per unità (€)">
+          <Field label={costPerUnitFromPackage != null ? 'Costo per unità (€) — dalla confezione' : 'Costo per unità (€)'}>
             <Input
               type="number"
               step="0.01"
-              value={unitCost}
+              value={costPerUnitFromPackage ?? unitCost}
+              disabled={costPerUnitFromPackage != null}
               onChange={(e) => setUnitCost(parseFloat(e.target.value) || 0)}
             />
           </Field>
@@ -241,14 +243,8 @@ export function MaterialForm({
           </div>
           {costPerUnitFromPackage != null && (
             <p className="text-sm text-lc-muted">
-              Costo per {unit || 'unità'}: <strong>{formatEUR(costPerUnitFromPackage)}</strong>{' '}
-              <button
-                type="button"
-                onClick={() => setUnitCost(Math.round(costPerUnitFromPackage * 10000) / 10000)}
-                className="font-semibold text-lc-olive underline"
-              >
-                usa questo costo
-              </button>
+              Costo per {unit || 'unità'}: <strong>{formatEUR(costPerUnitFromPackage)}</strong> — è quello usato nella
+              distinta base dei prodotti (non il prezzo dell'intera confezione).
             </p>
           )}
         </Card>

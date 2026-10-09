@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -130,31 +131,41 @@ export function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
   );
 }
 
+// Si esce solo con la ✕ (mai cliccando fuori, per non perdere per sbaglio quello che si sta compilando).
+// Con confirmClose (default) la ✕ chiede prima conferma; il contenuto resta montato sotto, quindi
+// scegliendo "Continua" non si perde nulla. Passa confirmClose={false} dove non c'è nulla da perdere.
 export function Modal({
   open,
   onClose,
   title,
   children,
+  confirmClose = true,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  confirmClose?: boolean;
 }) {
+  const [confirming, setConfirming] = useState(false);
   if (!open) return null;
+
+  function requestClose() {
+    if (confirmClose) setConfirming(true);
+    else onClose();
+  }
+
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-lc-accent-ink/50 backdrop-blur-[2px] sm:items-center"
-      onClick={onClose}
+      onClick={(e) => e.stopPropagation()}
     >
-      <div
-        className="max-h-[90svh] w-full max-w-lg animate-slide-up overflow-y-auto rounded-t-card border-2 border-lc-border bg-lc-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-soft sm:rounded-card sm:animate-pop-in"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="max-h-[90svh] w-full max-w-lg animate-slide-up overflow-y-auto rounded-t-card border-2 border-lc-border bg-lc-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-soft sm:rounded-card sm:animate-pop-in">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">{title}</h2>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={requestClose}
             className="flex h-8 w-8 items-center justify-center rounded-full text-lc-muted transition-colors hover:bg-lc-border/40 hover:text-lc-text"
             aria-label="Chiudi"
           >
@@ -163,6 +174,35 @@ export function Modal({
         </div>
         {children}
       </div>
+
+      {confirming && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-lc-accent-ink/40 p-4"
+          role="alertdialog"
+          aria-labelledby="modal-confirm-title"
+        >
+          <div className="w-full max-w-sm animate-pop-in rounded-card border-2 border-lc-border bg-lc-card p-5 shadow-soft">
+            <p id="modal-confirm-title" className="font-display text-base font-semibold">
+              Sei sicuro di chiudere?
+            </p>
+            <p className="mt-1 text-sm text-lc-muted">Perderai tutti i progressi fatti.</p>
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <SecondaryButton type="button" autoFocus onClick={() => setConfirming(false)}>
+                Continua a modificare
+              </SecondaryButton>
+              <DangerButton
+                type="button"
+                onClick={() => {
+                  setConfirming(false);
+                  onClose();
+                }}
+              >
+                Sì, chiudi
+              </DangerButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );

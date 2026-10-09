@@ -1,10 +1,23 @@
 import type { Material, Product, Order, OrderItem, OrderStatus } from '@/types';
 
+/** Costo del singolo pezzo/unità: se c'è una confezione è prezzo confezione ÷ pezzi, altrimenti il costo indicato. */
+export function effectiveUnitCost(material: Pick<Material, 'unitCost' | 'packageQty' | 'packagePrice'>): number {
+  if (material.packageQty && material.packageQty > 0 && material.packagePrice && material.packagePrice > 0) {
+    return material.packagePrice / material.packageQty;
+  }
+  return material.unitCost;
+}
+
+/** Gli ordini che contano come lavoro/incasso vero: i preventivi non sono certi, gli annullati non esistono più. */
+export function countsAsRevenue(order: Pick<Order, 'status'>): boolean {
+  return order.status !== 'preventivo' && order.status !== 'annullato';
+}
+
 export function materialCostOf(product: Pick<Product, 'bom'>, materials: Material[]): number {
   return product.bom.reduce((sum, line) => {
     const mat = materials.find((m) => m.id === line.materialId);
     if (!mat) return sum;
-    return sum + mat.unitCost * line.quantity;
+    return sum + effectiveUnitCost(mat) * line.quantity;
   }, 0);
 }
 

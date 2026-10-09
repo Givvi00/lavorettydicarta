@@ -49,10 +49,7 @@ export function SettingsModal({
           Rivedi il tour guidato
         </SecondaryButton>
 
-        <div className="mt-2 flex items-center justify-end gap-2">
-          <SecondaryButton type="button" onClick={onClose}>
-            Annulla
-          </SecondaryButton>
+        <div className="mt-2 flex items-center justify-end">
           <PrimaryButton type="submit">Salva</PrimaryButton>
         </div>
       </form>

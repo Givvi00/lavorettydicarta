@@ -17,7 +17,7 @@ import { Package, Tags, Trash2, Clock, Sparkles } from 'lucide-react';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { CreateProductByVoiceModal } from '@/components/CreateProductByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
-import { formatEUR, totalCostOf, marginOf } from '@/utils/calc';
+import { formatEUR, totalCostOf, marginOf, effectiveUnitCost } from '@/utils/calc';
 import type { BomLine, Category, Product, ProductType } from '@/types';
 
 const NEW_CATEGORY = '__new__';
@@ -189,7 +189,7 @@ function CategoriesModal({
   const [newName, setNewName] = useState('');
 
   return (
-    <Modal open={open} onClose={onClose} title="Categorie prodotti">
+    <Modal open={open} onClose={onClose} title="Categorie prodotti" confirmClose={false}>
       <div className="flex flex-col gap-3">
         <form
           className="flex gap-2"
@@ -288,7 +288,7 @@ function ProductForm({
 
   const materialCost = bom.reduce((sum, line) => {
     const mat = materials.find((m) => m.id === line.materialId);
-    return sum + (mat ? mat.unitCost * line.quantity : 0);
+    return sum + (mat ? effectiveUnitCost(mat) * line.quantity : 0);
   }, 0);
   const totalCost = materialCost + (laborCost || 0);
   const margin = salePrice - totalCost;
@@ -472,35 +472,45 @@ function ProductForm({
           <div className="flex flex-col gap-2">
             {bom.map((line, i) => {
               const mat = materials.find((m) => m.id === line.materialId);
+              const unitPrice = mat ? effectiveUnitCost(mat) : 0;
               return (
-                <div key={i} className="flex items-center gap-2">
-                  <Select
-                    className="flex-1"
-                    value={line.materialId}
-                    onChange={(e) => updateBomLine(i, { materialId: e.target.value })}
-                  >
-                    {materials.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </Select>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    className="w-24"
-                    value={line.quantity}
-                    onChange={(e) => updateBomLine(i, { quantity: parseFloat(e.target.value) || 0 })}
-                  />
-                  <span className="w-10 shrink-0 text-xs text-lc-muted">{mat?.unit}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeBomLine(i)}
-                    className="text-lc-danger"
-                    aria-label="Rimuovi"
-                  >
-                    ✕
-                  </button>
+                <div key={i} className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <Select
+                      className="flex-1"
+                      value={line.materialId}
+                      onChange={(e) => updateBomLine(i, { materialId: e.target.value })}
+                    >
+                      {materials.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </Select>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="w-24"
+                      value={line.quantity}
+                      onChange={(e) => updateBomLine(i, { quantity: parseFloat(e.target.value) || 0 })}
+                    />
+                    <span className="w-10 shrink-0 text-xs text-lc-muted">{mat?.unit}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeBomLine(i)}
+                      className="text-lc-danger"
+                      aria-label="Rimuovi"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {mat && (
+                    <p className="text-xs text-lc-muted">
+                      {line.quantity} {mat.unit} × {formatEUR(unitPrice)}/{mat.unit} ={' '}
+                      <strong className="text-lc-text">{formatEUR(unitPrice * line.quantity)}</strong>
+                      {mat.packageQty && mat.packagePrice ? ` (prezzo per singolo pezzo, dalla confezione da ${mat.packageQty})` : ''}
+                    </p>
+                  )}
                 </div>
               );
             })}

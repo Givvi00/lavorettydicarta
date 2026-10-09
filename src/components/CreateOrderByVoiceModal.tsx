@@ -227,6 +227,7 @@ export function CreateOrderByVoiceModal({ open, onClose }: { open: boolean; onCl
         onClose();
       }}
       title="Crea ordine raccontandolo"
+      confirmClose={step === 'review' || step === 'loading'}
     >
       {step === 'input' && (
         <div className="flex flex-col items-center gap-4 py-6 text-center">
@@ -407,10 +408,7 @@ export function CreateOrderByVoiceModal({ open, onClose }: { open: boolean; onCl
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </Field>
 
-          <div className="mt-2 flex items-center justify-between">
-            <SecondaryButton type="button" onClick={reset}>
-              Annulla
-            </SecondaryButton>
+          <div className="mt-2 flex items-center justify-end">
             <PrimaryButton type="button" onClick={confirmAll} disabled={saving || !customerId}>
               {saving ? 'Salvo...' : 'Crea ordine'}
             </PrimaryButton>
