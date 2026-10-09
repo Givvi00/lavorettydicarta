@@ -7,9 +7,14 @@ import { extractOrderDraft, type DraftOrderItem } from '@/services/voiceOrder';
 import { transcribeVoice } from '@/services/groqClient';
 import { bestMatch } from '@/utils/similarity';
 import { newId } from '@/utils/calc';
+import {
+  MatchLegend,
+  CONFIDENCE_LABEL,
+  CONFIDENCE_TONE,
+  CONFIDENCE_CARD,
+  type Confidence,
+} from '@/components/MatchLegend';
 import type { OrderItem } from '@/types';
-
-type Confidence = 'high' | 'medium' | 'low';
 
 interface ReviewItem {
   line: DraftOrderItem;
@@ -20,22 +25,6 @@ interface ReviewItem {
 const HIGH_THRESHOLD = 0.5;
 const LOW_THRESHOLD = 0.2;
 const MAX_SECONDS = 120;
-
-const CONFIDENCE_LABEL: Record<Confidence, string> = {
-  high: 'Corrispondenza trovata',
-  medium: 'Forse corrisponde, verifica',
-  low: 'Nessuna corrispondenza',
-};
-const CONFIDENCE_TONE: Record<Confidence, 'success' | 'accent' | 'danger'> = {
-  high: 'success',
-  medium: 'accent',
-  low: 'danger',
-};
-const CONFIDENCE_CARD: Record<Confidence, string> = {
-  high: 'border-lc-success/40 bg-lc-success/5',
-  medium: 'border-lc-accent/60 bg-lc-accent/5',
-  low: 'border-lc-danger/40 bg-lc-danger/5',
-};
 
 export function CreateOrderByVoiceModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { customers, products, upsertCustomer, upsertOrder } = useStore();
@@ -329,6 +318,11 @@ export function CreateOrderByVoiceModal({ open, onClose }: { open: boolean; onCl
             </p>
           )}
 
+          <MatchLegend
+            what="un cliente o un prodotto che hai già"
+            notFound="Scegli tu dall'elenco; se è un cliente nuovo premi «Crea nuovo cliente». Un articolo senza prodotto scelto non viene aggiunto all'ordine."
+          />
+
           <div className={`flex flex-col gap-2 rounded-btn border p-2 ${CONFIDENCE_CARD[customerConfidence]}`}>
             <div className="flex items-center justify-between gap-2">
               <Field label="Cliente">
@@ -364,12 +358,7 @@ export function CreateOrderByVoiceModal({ open, onClose }: { open: boolean; onCl
 
           {items.length > 0 && (
             <>
-              <p className="text-sm text-lc-muted">
-                Articoli —{' '}
-                <Badge tone="success">verde</Badge> trovato automaticamente ·{' '}
-                <Badge tone="accent">arancione</Badge> verifica tu ·{' '}
-                <Badge tone="danger">rosso</Badge> nessuna corrispondenza
-              </p>
+              <p className="text-sm font-semibold text-lc-muted">Articoli</p>
               <div className="flex flex-col gap-3">
                 {items.map((it, i) => (
                   <div key={i} className={`flex flex-col gap-2 rounded-btn border p-2 ${CONFIDENCE_CARD[it.confidence]}`}>

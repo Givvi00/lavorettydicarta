@@ -6,9 +6,14 @@ import { MaterialForm } from '@/pages/Materiali';
 import { extractProductDraft, type DraftBomLine } from '@/services/voiceProduct';
 import { transcribeVoice } from '@/services/groqClient';
 import { bestMatch } from '@/utils/similarity';
+import {
+  MatchLegend,
+  CONFIDENCE_LABEL,
+  CONFIDENCE_TONE,
+  CONFIDENCE_CARD,
+  type Confidence,
+} from '@/components/MatchLegend';
 import type { BomLine } from '@/types';
-
-type Confidence = 'high' | 'medium' | 'low';
 
 interface ReviewRow {
   line: DraftBomLine;
@@ -21,22 +26,6 @@ interface ReviewRow {
 const HIGH_THRESHOLD = 0.5;
 const LOW_THRESHOLD = 0.2;
 const MAX_SECONDS = 120;
-
-const CONFIDENCE_LABEL: Record<Confidence, string> = {
-  high: 'Corrispondenza trovata',
-  medium: 'Forse corrisponde, verifica',
-  low: 'Nessuna corrispondenza',
-};
-const CONFIDENCE_TONE: Record<Confidence, 'success' | 'accent' | 'danger'> = {
-  high: 'success',
-  medium: 'accent',
-  low: 'danger',
-};
-const CONFIDENCE_CARD: Record<Confidence, string> = {
-  high: 'border-lc-success/40 bg-lc-success/5',
-  medium: 'border-lc-accent/60 bg-lc-accent/5',
-  low: 'border-lc-danger/40 bg-lc-danger/5',
-};
 
 export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { materials, upsertMaterial, upsertProduct } = useStore();
@@ -343,12 +332,11 @@ export function CreateProductByVoiceModal({ open, onClose }: { open: boolean; on
 
           {rows.length > 0 && (
             <>
-              <p className="text-sm text-lc-muted">
-                Materiali usati —{' '}
-                <Badge tone="success">verde</Badge> trovato automaticamente ·{' '}
-                <Badge tone="accent">arancione</Badge> verifica tu ·{' '}
-                <Badge tone="danger">rosso</Badge> nessuna corrispondenza
-              </p>
+              <p className="text-sm font-semibold text-lc-muted">Materiali usati</p>
+              <MatchLegend
+                what="un materiale del tuo magazzino"
+                notFound="Per ora non lo aggiungo alla distinta base. Se invece ti serve, premi «Includi comunque» e poi scegli un materiale o creane uno nuovo."
+              />
               <div className="flex flex-col gap-3">
                 {rows.map((row, i) => {
                   const matchedMaterial = materials.find((m) => m.id === row.materialId);

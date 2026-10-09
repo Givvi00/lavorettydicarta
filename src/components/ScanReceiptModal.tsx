@@ -5,9 +5,14 @@ import { useStore } from '@/store/useStore';
 import { MaterialForm } from '@/pages/Materiali';
 import { readReceipt, type ReceiptLine } from '@/services/receiptOcr';
 import { bestMatch } from '@/utils/similarity';
+import {
+  MatchLegend,
+  CONFIDENCE_LABEL,
+  CONFIDENCE_TONE,
+  CONFIDENCE_CARD,
+  type Confidence,
+} from '@/components/MatchLegend';
 import type { Material } from '@/types';
-
-type Confidence = 'high' | 'medium' | 'low';
 
 interface ReviewRow {
   line: ReceiptLine;
@@ -19,22 +24,6 @@ interface ReviewRow {
 
 const HIGH_THRESHOLD = 0.5;
 const LOW_THRESHOLD = 0.2;
-
-const CONFIDENCE_LABEL: Record<Confidence, string> = {
-  high: 'Corrispondenza trovata',
-  medium: 'Forse corrisponde, verifica',
-  low: 'Nessuna corrispondenza',
-};
-const CONFIDENCE_TONE: Record<Confidence, 'success' | 'accent' | 'danger'> = {
-  high: 'success',
-  medium: 'accent',
-  low: 'danger',
-};
-const CONFIDENCE_CARD: Record<Confidence, string> = {
-  high: 'border-lc-success/40 bg-lc-success/5',
-  medium: 'border-lc-accent/60 bg-lc-accent/5',
-  low: 'border-lc-danger/40 bg-lc-danger/5',
-};
 
 export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { materials, upsertMaterial } = useStore();
@@ -149,11 +138,10 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
 
       {step === 'review' && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-lc-muted">
-            <Badge tone="success">verde</Badge> trovato automaticamente ·{' '}
-            <Badge tone="accent">arancione</Badge> verifica tu ·{' '}
-            <Badge tone="danger">rosso</Badge> nessuna corrispondenza (es. un frullatore)
-          </p>
+          <MatchLegend
+            what="un materiale del tuo magazzino"
+            notFound="La riga viene ignorata (per esempio un articolo che non è un materiale, come un frullatore). Se invece ti serve, premi «Annulla» e poi scegli un materiale o creane uno nuovo."
+          />
           <div className="flex flex-col gap-3">
             {rows.map((row, i) => {
               const matchedMaterial = materials.find((m) => m.id === row.materialId);
