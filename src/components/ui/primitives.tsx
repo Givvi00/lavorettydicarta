@@ -160,7 +160,7 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-end justify-center bg-lc-accent-ink/50 backdrop-blur-[2px] sm:items-center"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="max-h-[90svh] w-full max-w-lg animate-slide-up overflow-y-auto rounded-t-card border-2 border-lc-border bg-lc-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-soft sm:rounded-card sm:animate-pop-in">
+      <div className="lc-scroll max-h-[90svh] w-full max-w-lg animate-slide-up overflow-y-auto rounded-t-card border-2 border-lc-border bg-lc-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-soft sm:rounded-card sm:animate-pop-in">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">{title}</h2>
           <button

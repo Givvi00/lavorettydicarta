@@ -54,6 +54,28 @@ body {
   font-family: 'Fredoka', system-ui, sans-serif;
 }
 
+/* barra di scorrimento sottile e discreta, nei colori del tema (modali e area principale) */
+.lc-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--lc-muted) / 0.45) transparent;
+}
+.lc-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.lc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lc-scroll::-webkit-scrollbar-thumb {
+  background: rgb(var(--lc-muted) / 0.45);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.lc-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--lc-muted) / 0.7);
+  background-clip: content-box;
+}
+
 /* sfondo a puntini leggero, texture "carta" */
 .lc-paper-bg {
   background-image: radial-gradient(rgb(var(--lc-accent-ink) / 0.06) 1px, transparent 1px);
