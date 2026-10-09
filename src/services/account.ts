@@ -10,7 +10,12 @@ const SESSION_KEY = 'lc-auth';
 // Le uniche persone che possono entrare nell'app. Chiunque altro fa login con Google ma viene
 // subito disconnesso: la vera barriera però sta nella Google Cloud Console (OAuth consent screen in
 // modalità "Testing" con solo questi indirizzi come test user) — Google stesso rifiuta gli altri.
-const ALLOWED_EMAILS = ['vitale.gabriele24@gmail.com', 'paopt96@gmail.com', 'razikana99@gmail.com'];
+const ALLOWED_EMAILS = [
+  'vitale.gabriele24@gmail.com',
+  'paopt96@gmail.com',
+  'razikana99@gmail.com',
+  'giovannisevieri@gmail.com',
+];
 
 let clientPromise: Promise<SupabaseClient> | null = null;
 
