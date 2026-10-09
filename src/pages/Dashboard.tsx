@@ -44,12 +44,14 @@ export function Dashboard() {
     })
     .reduce((sum, o) => sum + orderTotal(o), 0);
 
+  const monthName = new Date().toLocaleDateString('it-IT', { month: 'long' });
+
   const stats = [
+    { label: 'Ordini totali', value: revenueOrders.length, icon: ShoppingBag, tone: 'bg-lc-accent/25 text-lc-olive' },
     { label: 'Ordini attivi', value: activeOrders.length, icon: ClipboardList, tone: 'bg-lc-accent/25 text-lc-olive' },
     { label: 'Preventivi', value: quotes.length, icon: FileClock, tone: 'bg-lc-pink/20 text-lc-pink' },
-    { label: 'Ordini totali', value: revenueOrders.length, icon: ShoppingBag, tone: 'bg-lc-accent/25 text-lc-olive' },
-    { label: 'Incasso mese', value: formatEUR(revenueThisMonth), icon: Euro, tone: 'bg-lc-success/15 text-lc-success' },
     { label: 'Incasso totale', value: formatEUR(totalRevenue), icon: Wallet, tone: 'bg-lc-success/15 text-lc-success' },
+    { label: `Incasso di ${monthName}`, value: formatEUR(revenueThisMonth), icon: Euro, tone: 'bg-lc-success/15 text-lc-success' },
     { label: 'Clienti', value: customers.length, icon: Users2, tone: 'bg-lc-border/60 text-lc-text' },
   ];
 
