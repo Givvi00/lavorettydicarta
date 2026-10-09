@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type {
   ButtonHTMLAttributes,
+  CSSProperties,
   InputHTMLAttributes,
   ReactNode,
   SelectHTMLAttributes,
@@ -8,9 +9,30 @@ import type {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
+export type TapeColor = 'yellow' | 'pink' | 'mint' | 'sky' | 'lilac' | 'peach';
+
+// Una "pagina di carta". tape = striscia di washi tape incollata sopra, lift = si solleva al passaggio.
+export function Card({
+  children,
+  className = '',
+  tape,
+  lift = false,
+  style,
+}: {
+  children: ReactNode;
+  className?: string;
+  tape?: TapeColor;
+  lift?: boolean;
+  style?: CSSProperties;
+}) {
   return (
-    <div className={`rounded-card border border-lc-border bg-lc-card p-4 shadow-card ${className}`}>
+    <div
+      style={style}
+      className={`relative rounded-card border border-lc-border bg-lc-card p-4 shadow-card ${
+        lift ? 'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lift' : ''
+      } ${className}`}
+    >
+      {tape && <span aria-hidden className={`lc-tape lc-tape-${tape}`} />}
       {children}
     </div>
   );
@@ -23,7 +45,7 @@ export function PrimaryButton({
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`rounded-blob bg-lc-accent px-5 py-2.5 font-display font-semibold text-lc-accent-text shadow-press transition-transform active:shadow-press-down active:translate-y-[3px] disabled:opacity-50 disabled:active:translate-y-0 ${className}`}
+      className={`rounded-blob bg-lc-accent px-5 py-2.5 font-display font-semibold text-lc-accent-text shadow-press ring-1 ring-inset ring-white/40 transition-[transform,filter,box-shadow] hover:brightness-105 active:shadow-press-down active:translate-y-[3px] disabled:opacity-50 disabled:active:translate-y-0 ${className}`}
       {...props}
     >
       {children}
@@ -38,7 +60,7 @@ export function SecondaryButton({
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`rounded-blob border-2 border-lc-border bg-lc-surface px-5 py-2.5 font-display font-semibold text-lc-text transition-transform active:translate-y-0.5 disabled:opacity-50 ${className}`}
+      className={`rounded-blob border-2 border-lc-border bg-lc-surface px-5 py-2.5 font-display font-semibold text-lc-text transition-[transform,border-color] hover:border-lc-accent active:translate-y-0.5 disabled:opacity-50 ${className}`}
       {...props}
     >
       {children}
@@ -74,7 +96,7 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-lc-text outline-none transition-colors focus:border-lc-accent ${props.className ?? ''}`}
+      className={`rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-lc-text outline-none transition-[border-color,box-shadow] focus:border-lc-accent focus:ring-4 focus:ring-lc-accent/25 ${props.className ?? ''}`}
     />
   );
 }
@@ -83,7 +105,7 @@ export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
       {...props}
-      className={`rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-lc-text outline-none transition-colors focus:border-lc-accent ${props.className ?? ''}`}
+      className={`rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-lc-text outline-none transition-[border-color,box-shadow] focus:border-lc-accent focus:ring-4 focus:ring-lc-accent/25 ${props.className ?? ''}`}
     />
   );
 }
@@ -96,7 +118,7 @@ export function Select({
   return (
     <select
       {...props}
-      className={`rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-lc-text outline-none transition-colors focus:border-lc-accent ${className}`}
+      className={`rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-lc-text outline-none transition-[border-color,box-shadow] focus:border-lc-accent focus:ring-4 focus:ring-lc-accent/25 ${className}`}
     >
       {children}
     </select>

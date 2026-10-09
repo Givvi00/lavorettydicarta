@@ -155,7 +155,12 @@ type ValueOf<T extends StoreName> = T extends 'customers'
         ? Order
         : Category;
 
+// Solo in sviluppo locale con ?demo: dati d'esempio in memoria (vedi src/dev/demo.ts). Nel sito pubblicato
+// import.meta.env.DEV è falso e questi rami spariscono dalla build.
+const DEMO = import.meta.env.DEV && new URLSearchParams(window.location.search).has('demo');
+
 export async function getAll<T extends StoreName>(store: T): Promise<ValueOf<T>[]> {
+  if (DEMO) return (await (await import('../dev/demo')).demoGetAll(store)) as ValueOf<T>[];
   const client = await getClient();
   const mapper = MAPPERS[store];
   const { data, error } = await client.from(mapper.table).select('*');
@@ -164,6 +169,7 @@ export async function getAll<T extends StoreName>(store: T): Promise<ValueOf<T>[
 }
 
 export async function put<T extends StoreName>(store: T, value: ValueOf<T>): Promise<void> {
+  if (DEMO) return (await import('../dev/demo')).demoPut(store, value);
   const client = await getClient();
   const mapper = MAPPERS[store];
   const { error } = await client.from(mapper.table).upsert(mapper.toDb(value));
@@ -171,6 +177,7 @@ export async function put<T extends StoreName>(store: T, value: ValueOf<T>): Pro
 }
 
 export async function remove<T extends StoreName>(store: T, id: string): Promise<void> {
+  if (DEMO) return (await import('../dev/demo')).demoRemove(store, id);
   const client = await getClient();
   const mapper = MAPPERS[store];
   const { error } = await client.from(mapper.table).delete().eq('id', id);

@@ -49,7 +49,7 @@ export function Ordini() {
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-semibold md:text-2xl">Ordini &amp; preventivi</h1>
+        <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Ordini</span> &amp; preventivi</h1>
         <div className="flex gap-2">
           <SecondaryButton
             onClick={() => setCreatingByVoice(true)}
@@ -87,7 +87,7 @@ export function Ordini() {
         {filtered.map((o) => {
           const customer = customers.find((c) => c.id === o.customerId);
           return (
-            <Card key={o.id} className="flex items-center justify-between">
+            <Card key={o.id} lift className="flex items-center justify-between">
               <div onClick={() => setEditing(o)} className="flex-1 cursor-pointer text-left">
                 <div className="flex items-center gap-2">
                   <p className="font-semibold">{customer?.name ?? 'Cliente sconosciuto'}</p>

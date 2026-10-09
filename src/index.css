@@ -3,27 +3,31 @@
 @tailwind utilities;
 
 :root {
-  /* Brand: giallo Lavoretty di Carta */
-  --lc-bg: 255 251 240;
-  --lc-surface: 255 255 255;
-  --lc-card: 255 255 255;
-  --lc-border: 240 225 185;
-  --lc-text: 58 46 18;
-  --lc-muted: 143 126 90;
-  --lc-accent: 246 201 69;
-  --lc-accent-text: 58 46 18;
-  --lc-accent-ink: 58 46 18;
+  /* Brand: giallo Lavoretty di Carta, su carta color crema, con pastelli da washi tape */
+  --lc-bg: 253 247 233;
+  --lc-surface: 255 252 244;
+  --lc-card: 255 254 250;
+  --lc-border: 238 223 184;
+  --lc-text: 56 41 20;
+  --lc-muted: 140 120 85;
+  --lc-accent: 247 198 54;
+  --lc-accent-text: 56 41 20;
+  --lc-accent-ink: 56 41 20;
   --lc-olive: 138 119 20;
-  --lc-pink: 240 163 188;
+  --lc-pink: 240 150 180;
+  --lc-mint: 150 206 178;
+  --lc-sky: 156 198 230;
+  --lc-lilac: 197 176 228;
+  --lc-peach: 248 178 140;
   --lc-danger: 214 69 69;
   --lc-success: 95 155 95;
 }
 
 :root.dark {
-  --lc-bg: 28 24 16;
-  --lc-surface: 38 32 21;
+  --lc-bg: 27 22 15;
+  --lc-surface: 37 31 20;
   --lc-card: 45 38 25;
-  --lc-border: 64 54 34;
+  --lc-border: 66 55 34;
   --lc-text: 248 240 222;
   --lc-muted: 181 165 134;
   --lc-accent: 246 201 69;
@@ -31,6 +35,10 @@
   --lc-accent-ink: 20 16 6;
   --lc-olive: 212 188 103;
   --lc-pink: 224 150 177;
+  --lc-mint: 110 170 140;
+  --lc-sky: 110 160 200;
+  --lc-lilac: 160 140 200;
+  --lc-peach: 214 140 105;
   --lc-danger: 240 118 118;
   --lc-success: 134 196 134;
 }
@@ -43,15 +51,101 @@ body,
 
 body {
   margin: 0;
-  background: rgb(var(--lc-bg));
+  background-color: rgb(var(--lc-bg));
+  /* macchie di colore morbide, fisse, dietro a tutto: danno profondità senza appesantire */
+  background-image:
+    radial-gradient(52rem 36rem at 92% -8%, rgb(var(--lc-accent) / 0.22), transparent 62%),
+    radial-gradient(44rem 32rem at -8% 22%, rgb(var(--lc-pink) / 0.14), transparent 62%),
+    radial-gradient(40rem 30rem at 62% 112%, rgb(var(--lc-sky) / 0.14), transparent 62%);
+  background-attachment: fixed;
   color: rgb(var(--lc-text));
   font-family: 'Nunito', system-ui, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
 
+/* grana di carta, leggerissima, sopra lo sfondo */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 .font-display {
   font-family: 'Fredoka', system-ui, sans-serif;
+}
+
+/* scritta a mano, per i dettagli "da quaderno" */
+.font-hand {
+  font-family: 'Caveat', 'Fredoka', cursive;
+}
+
+/* evidenziatore giallo sotto una parte del titolo */
+.lc-marker {
+  background-image: linear-gradient(
+    transparent 58%,
+    rgb(var(--lc-accent) / 0.55) 58%,
+    rgb(var(--lc-accent) / 0.55) 92%,
+    transparent 92%
+  );
+  padding: 0 0.18em;
+  margin: 0 -0.18em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* washi tape: striscia semitrasparente incollata sul bordo alto di una card */
+.lc-tape {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 62px;
+  height: 18px;
+  transform: translateX(-50%) rotate(var(--tape-rot, -3deg));
+  background: repeating-linear-gradient(
+    45deg,
+    rgb(var(--tape) / 0.8) 0 6px,
+    rgb(var(--tape) / 0.55) 6px 12px
+  );
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+  pointer-events: none;
+}
+.lc-tape-yellow { --tape: var(--lc-accent); }
+.lc-tape-pink { --tape: var(--lc-pink); --tape-rot: 3deg; }
+.lc-tape-mint { --tape: var(--lc-mint); }
+.lc-tape-sky { --tape: var(--lc-sky); --tape-rot: 2deg; }
+.lc-tape-lilac { --tape: var(--lc-lilac); --tape-rot: -2deg; }
+.lc-tape-peach { --tape: var(--lc-peach); --tape-rot: 3deg; }
+
+/* adesivo: icona rotonda con bordo bianco, leggermente storta */
+.lc-sticker {
+  border: 3px solid rgb(var(--lc-card));
+  box-shadow: 0 3px 8px -2px rgb(0 0 0 / 0.22);
+  transform: rotate(-6deg);
+}
+
+@keyframes lc-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(6deg); }
+}
+.lc-float {
+  animation: lc-float 3.6s ease-in-out infinite;
+}
+
+/* chi preferisce meno movimento non vede animazioni continue */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* barra di scorrimento sottile e discreta, nei colori del tema (modali e area principale) */
@@ -104,7 +198,7 @@ body {
     110deg,
     rgb(var(--lc-accent)),
     rgb(var(--lc-pink)),
-    rgb(var(--lc-olive)),
+    rgb(var(--lc-lilac)),
     rgb(var(--lc-accent))
   );
   background-size: 300% 300%;

@@ -41,7 +41,7 @@ export function Prodotti() {
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-semibold md:text-2xl">Prodotti</h1>
+        <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Prodotti</span></h1>
         <div className="flex gap-2">
           <SecondaryButton onClick={() => setManagingCategories(true)}>
             <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
@@ -85,7 +85,7 @@ export function Prodotti() {
           const cost = totalCostOf(p, materials);
           const margin = marginOf(p, materials);
           return (
-            <Card key={p.id} className="flex items-center gap-3">
+            <Card key={p.id} lift className="flex items-center gap-3">
               <div onClick={() => setEditing(p)} className="flex flex-1 cursor-pointer items-center gap-3 text-left">
                 {p.photo ? (
                   <img src={p.photo} alt="" className="h-11 w-11 shrink-0 rounded-btn object-cover" />

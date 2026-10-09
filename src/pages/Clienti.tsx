@@ -16,7 +16,7 @@ export function Clienti() {
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-xl font-semibold md:text-2xl">Clienti</h1>
+        <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Clienti</span></h1>
         <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
       </div>
 
@@ -34,7 +34,7 @@ export function Clienti() {
         {filtered.map((c) => {
           const wa = toWhatsAppLink(c.phone);
           return (
-            <Card key={c.id} className="flex items-center justify-between gap-2">
+            <Card key={c.id} lift className="flex items-center justify-between gap-2">
               <div onClick={() => setEditing(c)} className="flex flex-1 cursor-pointer items-center gap-3 text-left">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lc-accent/30 font-display font-semibold text-lc-olive">
                   {c.name.slice(0, 1).toUpperCase()}

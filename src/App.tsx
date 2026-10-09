@@ -16,6 +16,9 @@ const Ordini = lazy(() => import('@/pages/Ordini').then((m) => ({ default: m.Ord
 
 type Tab = 'dashboard' | 'clienti' | 'materiali' | 'prodotti' | 'ordini';
 
+// Solo in sviluppo locale (?demo): niente login, dati d'esempio (vedi src/dev/demo.ts). Assente nel sito pubblicato.
+const DEMO = import.meta.env.DEV && new URLSearchParams(window.location.search).has('demo');
+
 const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
   { id: 'ordini', label: 'Ordini', icon: ClipboardList },
@@ -33,7 +36,9 @@ function App() {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    if (GOOGLE_RETURN) {
+    if (DEMO) {
+      setAccount({ id: 'demo', email: 'demo@locale' });
+    } else if (GOOGLE_RETURN) {
       finishGoogle()
         .then(setAccount)
         .catch(() => setAccount(null));
@@ -51,7 +56,7 @@ function App() {
   }, [account, load]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || DEMO) return;
     try {
       if (!localStorage.getItem('lc-onboarding-done')) setTourActive(true);
     } catch {
@@ -91,17 +96,17 @@ function App() {
   }
 
   return (
-    <div className="flex h-dvh flex-col bg-lc-bg md:flex-row">
-      {/* Sidebar: solo da tablet/desktop in su */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r-2 border-lc-border bg-lc-surface md:flex">
-        <div className="flex items-center gap-2.5 border-b-2 border-lc-border px-4 py-4">
-          <img src={logo} alt="Lavoretty di Carta" className="h-10 w-10 rounded-2xl shadow-soft" />
+    <div className="relative z-[1] flex h-dvh flex-col md:flex-row">
+      {/* Sidebar: solo da tablet/desktop in su, come un foglio appoggiato sulla scrivania */}
+      <aside className="hidden w-60 shrink-0 flex-col rounded-card border-2 border-lc-border bg-lc-surface/85 shadow-soft backdrop-blur md:m-3 md:mr-0 md:flex">
+        <div className="flex items-center gap-3 border-b-2 border-dashed border-lc-border px-4 py-4">
+          <img src={logo} alt="Lavoretty di Carta" className="lc-sticker h-11 w-11 rounded-2xl" />
           <div className="leading-tight">
             <p className="font-display text-sm font-semibold">Lavoretty di Carta</p>
-            <p className="text-[11px] font-semibold text-lc-muted">angolo creativo ✂️</p>
+            <p className="font-hand text-lg leading-none text-lc-olive">il tuo angolo creativo</p>
           </div>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3">
+        <nav className="flex flex-1 flex-col gap-1.5 p-3">
           {TABS.map(({ id, label, icon: Icon }) => {
             const active = tab === id;
             return (
@@ -109,8 +114,10 @@ function App() {
                 key={id}
                 data-tour={`nav-${id}`}
                 onClick={() => setTab(id)}
-                className={`flex items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold transition-colors ${
-                  active ? 'bg-lc-accent/30 text-lc-olive' : 'text-lc-muted hover:bg-lc-border/30 hover:text-lc-text'
+                className={`flex items-center gap-3 rounded-btn px-3 py-2.5 text-left font-display text-sm font-semibold transition-all ${
+                  active
+                    ? 'bg-lc-accent text-lc-accent-text shadow-press'
+                    : 'text-lc-muted hover:translate-x-0.5 hover:bg-lc-accent/20 hover:text-lc-text'
                 }`}
               >
                 <Icon size={19} strokeWidth={active ? 2.5 : 2} />
@@ -119,7 +126,7 @@ function App() {
             );
           })}
         </nav>
-        <div className="flex flex-col gap-1 border-t-2 border-lc-border p-3">
+        <div className="flex flex-col gap-1 border-t-2 border-dashed border-lc-border p-3">
           <button
             data-tour="btn-impostazioni"
             onClick={() => setSettingsOpen(true)}
@@ -148,15 +155,15 @@ function App() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header: solo su mobile, la sidebar lo sostituisce da md in su */}
-        <header className="relative overflow-hidden border-b-2 border-lc-border bg-lc-accent px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))] md:hidden">
+        <header className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-br from-lc-accent via-lc-accent to-lc-peach px-4 pb-5 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-soft md:hidden">
           <div className="lc-paper-bg pointer-events-none absolute inset-0 opacity-40" />
           <div className="relative flex items-center gap-3">
-            <img src={logo} alt="Lavoretty di Carta" className="h-11 w-11 rounded-2xl shadow-soft" />
+            <img src={logo} alt="Lavoretty di Carta" className="lc-sticker h-12 w-12 rounded-2xl" />
             <div className="flex-1">
               <h1 className="font-display text-lg font-semibold leading-tight text-lc-accent-ink">
                 Lavoretty di Carta
               </h1>
-              <p className="text-xs font-semibold text-lc-accent-ink/70">il tuo angolo creativo ✂️✨</p>
+              <p className="font-hand text-lg leading-none text-lc-accent-ink/80">il tuo angolo creativo ✨</p>
             </div>
             <button
               data-tour="btn-impostazioni"
@@ -177,7 +184,7 @@ function App() {
           </div>
         </header>
 
-        <main className="lc-scroll flex-1 overflow-y-auto pb-24 md:pb-6">
+        <main className="lc-scroll flex-1 overflow-y-auto pb-28 md:pb-6">
           <div className="mx-auto w-full max-w-6xl">
             <Suspense fallback={<div className="p-4 text-lc-muted">Caricamento...</div>}>
               {tab === 'dashboard' && <Dashboard />}
@@ -189,8 +196,8 @@ function App() {
           </div>
         </main>
 
-        {/* Tab bar: solo su mobile */}
-        <nav className="fixed bottom-0 left-0 flex w-full gap-1 border-t-2 border-lc-border bg-lc-surface px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 md:hidden">
+        {/* Barra di navigazione fluttuante: solo su mobile */}
+        <nav className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 flex gap-1 rounded-blob border-2 border-lc-border bg-lc-surface/85 p-1.5 shadow-soft backdrop-blur md:hidden">
           {TABS.map(({ id, label, icon: Icon }) => {
             const active = tab === id;
             return (
@@ -198,8 +205,8 @@ function App() {
                 key={id}
                 data-tour={`nav-${id}`}
                 onClick={() => setTab(id)}
-                className={`flex flex-1 flex-col items-center gap-0.5 rounded-btn py-1.5 text-[11px] font-bold transition-colors ${
-                  active ? 'bg-lc-accent/30 text-lc-olive' : 'text-lc-muted'
+                className={`flex flex-1 flex-col items-center gap-0.5 rounded-[1.1rem] py-1.5 text-[11px] font-bold transition-all active:scale-95 ${
+                  active ? 'bg-lc-accent text-lc-accent-text shadow-press' : 'text-lc-muted'
                 }`}
               >
                 <Icon size={20} strokeWidth={active ? 2.5 : 2} />

@@ -7,6 +7,7 @@ export default {
       fontFamily: {
         display: ['Fredoka', 'system-ui', 'sans-serif'],
         sans: ['Nunito', 'system-ui', 'sans-serif'],
+        hand: ['Caveat', 'Fredoka', 'cursive'],
       },
       colors: {
         lc: {
@@ -21,6 +22,10 @@ export default {
           'accent-ink': 'rgb(var(--lc-accent-ink) / <alpha-value>)',
           olive: 'rgb(var(--lc-olive) / <alpha-value>)',
           pink: 'rgb(var(--lc-pink) / <alpha-value>)',
+          mint: 'rgb(var(--lc-mint) / <alpha-value>)',
+          sky: 'rgb(var(--lc-sky) / <alpha-value>)',
+          lilac: 'rgb(var(--lc-lilac) / <alpha-value>)',
+          peach: 'rgb(var(--lc-peach) / <alpha-value>)',
           danger: 'rgb(var(--lc-danger) / <alpha-value>)',
           success: 'rgb(var(--lc-success) / <alpha-value>)',
         },
@@ -34,7 +39,8 @@ export default {
         press: '0 3px 0 0 rgb(var(--lc-accent-ink) / 0.25)',
         'press-down': '0 0px 0 0 rgb(var(--lc-accent-ink) / 0.25)',
         soft: '0 8px 24px -10px rgb(0 0 0 / 0.18)',
-        card: '0 2px 10px -4px rgb(0 0 0 / 0.08)',
+        card: '0 2px 10px -4px rgb(0 0 0 / 0.08), 0 1px 0 0 rgb(255 255 255 / 0.6) inset',
+        lift: '0 14px 30px -12px rgb(var(--lc-accent-ink) / 0.28)',
       },
       keyframes: {
         'pop-in': {
