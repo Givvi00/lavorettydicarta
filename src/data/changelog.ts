@@ -14,7 +14,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
     version: '1.3',
     date: '2026-10-12',
     items: [
-      'Su telefono titolo, pulsanti e filtri restano fissi in cima a ogni pagina e sono più compatti: scorre solo l'elenco.',
+      "Su telefono titolo, pulsanti e filtri restano fissi in cima a ogni pagina e sono più compatti: scorre solo l'elenco.",
       'Le schede dei materiali sono più ordinate: foto, nome e quantità in alto, i pulsanti (Link, Giacenza, Modifica) sotto.',
     ],
   },
