@@ -14,6 +14,7 @@ import {
   EmptyState,
 } from '@/components/ui/primitives';
 import { ClipboardList, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { PageBar } from '@/components/ui/PageBar';
 import { CreateOrderByVoiceModal } from '@/components/CreateOrderByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
 import { formatEUR, orderSubtotal, orderTotal, newId, materialShortfallsFor } from '@/utils/calc';
@@ -48,37 +49,40 @@ export function Ordini() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Ordini</span> &amp; preventivi</h1>
-        <div className="flex flex-wrap gap-2">
-          <SecondaryButton
-            onClick={() => setCreatingByVoice(true)}
-            disabled={products.length === 0}
-            className="lc-ai-gradient border-transparent text-lc-accent-text"
+      <PageBar
+        title={<><span className="lc-marker">Ordini</span> &amp; preventivi</>}
+        actions={
+          <>
+            <SecondaryButton
+              onClick={() => setCreatingByVoice(true)}
+              disabled={products.length === 0}
+              className="lc-ai-gradient border-transparent text-lc-accent-text"
+            >
+              <Sparkles size={16} className="mr-1 inline -mt-0.5" /> Racconta
+            </SecondaryButton>
+            <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)} disabled={customers.length === 0}>
+              + Nuovo
+            </PrimaryButton>
+          </>
+        }
+        filters={
+          <Select
+            className="min-w-0 flex-1 md:max-w-xs md:flex-none"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as OrderStatus | 'tutti')}
           >
-            <Sparkles size={16} className="mr-1 inline -mt-0.5" /> Racconta
-          </SecondaryButton>
-          <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)} disabled={customers.length === 0}>
-            + Nuovo
-          </PrimaryButton>
-        </div>
-      </div>
+            <option value="tutti">Tutti gli stati</option>
+            {Object.entries(STATUS_LABEL).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        }
+      />
       {customers.length === 0 && (
         <p className="text-sm text-lc-muted">Aggiungi prima un cliente per creare un ordine.</p>
       )}
-
-      <Select
-        className="md:max-w-xs"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value as OrderStatus | 'tutti')}
-      >
-        <option value="tutti">Tutti gli stati</option>
-        {Object.entries(STATUS_LABEL).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </Select>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 && (

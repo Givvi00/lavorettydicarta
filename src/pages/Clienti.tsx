@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Users2, MessageCircle } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Card, PrimaryButton, SecondaryButton, DangerButton, Modal, Field, Input, Textarea, EmptyState } from '@/components/ui/primitives';
+import { PageBar } from '@/components/ui/PageBar';
 import { toWhatsAppLink } from '@/utils/phone';
 import type { Customer } from '@/types';
 
@@ -15,16 +16,21 @@ export function Clienti() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Clienti</span></h1>
-        <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
-      </div>
-
-      <Input
-        className="md:max-w-xs"
-        placeholder="Cerca cliente..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
+      <PageBar
+        title={<span className="lc-marker">Clienti</span>}
+        actions={
+          <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>
+            + Nuovo
+          </PrimaryButton>
+        }
+        filters={
+          <Input
+            className="w-full md:max-w-xs"
+            placeholder="Cerca cliente..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        }
       />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">

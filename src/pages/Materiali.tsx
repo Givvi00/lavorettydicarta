@@ -14,6 +14,7 @@ import {
   EmptyState,
 } from '@/components/ui/primitives';
 import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart, Tags, PackageMinus } from 'lucide-react';
+import { PageBar } from '@/components/ui/PageBar';
 import { PhotoPicker, Lightbox } from '@/components/ui/PhotoPicker';
 import { ScanReceiptModal } from '@/components/ScanReceiptModal';
 import { formatEUR, aggregateMaterialShortfalls, effectiveUnitCost } from '@/utils/calc';
@@ -54,18 +55,62 @@ export function Materiali() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Materiali</span></h1>
-        <div className="flex flex-wrap gap-2">
-          <SecondaryButton onClick={() => setManaging(true)}>
-            <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
-          </SecondaryButton>
-          <SecondaryButton data-tour="btn-scontrino" onClick={() => setScanning(true)}>
-            <Receipt size={16} className="mr-1 inline -mt-0.5" /> Scontrino
-          </SecondaryButton>
-          <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
-        </div>
-      </div>
+      <PageBar
+        title={<span className="lc-marker">Materiali</span>}
+        actions={
+          <>
+            <SecondaryButton onClick={() => setManaging(true)}>
+              <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
+            </SecondaryButton>
+            <SecondaryButton data-tour="btn-scontrino" onClick={() => setScanning(true)}>
+              <Receipt size={16} className="mr-1 inline -mt-0.5" /> Scontrino
+            </SecondaryButton>
+            <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
+          </>
+        }
+        filters={
+          <>
+            <Input
+              className="w-full md:max-w-xs"
+              placeholder="Cerca materiale..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            {(categories.length > 0 || suppliers.length > 0) && (
+              <>
+                <Select
+                  className="min-w-0 flex-1 md:flex-none"
+                  value={catFilter}
+                  onChange={(e) => setCatFilter(e.target.value)}
+                  aria-label="Filtra per categoria"
+                >
+                  <option value="">Tutte le categorie</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                  <option value="__none">Senza categoria</option>
+                </Select>
+                <Select
+                  className="min-w-0 flex-1 md:flex-none"
+                  value={supFilter}
+                  onChange={(e) => setSupFilter(e.target.value)}
+                  aria-label="Filtra per fornitore"
+                >
+                  <option value="">Tutti i fornitori</option>
+                  {suppliers.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                  <option value="__none">Senza fornitore</option>
+                </Select>
+              </>
+            )}
+          </>
+        }
+      />
 
       {shoppingList.length > 0 && (
         <Card className="border-lc-danger/30">
@@ -85,37 +130,6 @@ export function Materiali() {
         </Card>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <Input
-          className="w-full md:max-w-xs"
-          placeholder="Cerca materiale..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        {(categories.length > 0 || suppliers.length > 0) && (
-          <>
-            <Select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} aria-label="Filtra per categoria">
-              <option value="">Tutte le categorie</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-              <option value="__none">Senza categoria</option>
-            </Select>
-            <Select value={supFilter} onChange={(e) => setSupFilter(e.target.value)} aria-label="Filtra per fornitore">
-              <option value="">Tutti i fornitori</option>
-              {suppliers.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-              <option value="__none">Senza fornitore</option>
-            </Select>
-          </>
-        )}
-      </div>
-
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 && (
           <EmptyState icon={<Boxes />} text="Il magazzino è vuoto: aggiungi il primo materiale." />
@@ -123,63 +137,67 @@ export function Materiali() {
         {filtered.map((m) => {
           const low = m.minStock != null && m.stockQty <= m.minStock;
           return (
-            <Card key={m.id} lift className="flex items-center gap-3">
-              {m.photo && (
-                <button
-                  type="button"
-                  aria-label="Ingrandisci foto"
-                  onClick={() => setZoomPhoto(m.photo!)}
-                  className="shrink-0"
-                >
-                  <img src={m.photo} alt="" className="h-11 w-11 cursor-zoom-in rounded-btn object-cover" />
-                </button>
-              )}
-              <div onClick={() => setEditing(m)} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left">
-                {!m.photo && (
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-lc-accent/20 text-lc-olive">
-                    <Boxes size={18} />
-                  </span>
+            <Card key={m.id} lift className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                {m.photo && (
+                  <button
+                    type="button"
+                    aria-label="Ingrandisci foto"
+                    onClick={() => setZoomPhoto(m.photo!)}
+                    className="shrink-0"
+                  >
+                    <img src={m.photo} alt="" className="h-14 w-14 cursor-zoom-in rounded-btn object-cover" />
+                  </button>
                 )}
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold">{m.name}</p>
-                    {m.category && <Badge>{m.category}</Badge>}
-                    {low && <Badge tone="danger">scorta bassa</Badge>}
-                  </div>
-                  <p className="text-sm text-lc-muted">
-                    {m.stockQty} {m.unit} disponibili · {formatEUR(effectiveUnitCost(m))}/{m.unit}
-                    {m.supplier ? ` · ${m.supplier}` : ''}
-                  </p>
-                  {m.packageQty && m.packagePrice ? (
-                    <p className="text-xs text-lc-muted">
-                      Confezione: {m.packageQty} {m.unit} · {formatEUR(m.packagePrice)}
+                <div onClick={() => setEditing(m)} className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 text-left">
+                  {!m.photo && (
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-btn bg-lc-accent/20 text-lc-olive">
+                      <Boxes size={20} />
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-semibold leading-snug">{m.name}</p>
+                    {(m.category || low) && (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {m.category && <Badge>{m.category}</Badge>}
+                        {low && <Badge tone="danger">scorta bassa</Badge>}
+                      </div>
+                    )}
+                    <p className="mt-1 text-sm text-lc-muted">
+                      {m.stockQty} {m.unit} disponibili · {formatEUR(effectiveUnitCost(m))}/{m.unit}
+                      {m.supplier ? ` · ${m.supplier}` : ''}
                     </p>
-                  ) : null}
+                    {m.packageQty && m.packagePrice ? (
+                      <p className="text-xs text-lc-muted">
+                        Confezione: {m.packageQty} {m.unit} · {formatEUR(m.packagePrice)}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex items-center gap-2 border-t border-dashed border-lc-border pt-3">
                 {m.purchaseUrl && (
                   <a
                     href={m.purchaseUrl}
                     target="_blank"
                     rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
                     aria-label="Apri link acquisto"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-lc-accent/20 text-lc-olive transition-transform active:scale-90"
+                    className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-btn bg-lc-accent/20 px-3 text-sm font-semibold text-lc-olive transition-transform active:scale-95"
                   >
-                    <ExternalLink size={16} />
+                    <ExternalLink size={15} /> Link
                   </a>
                 )}
                 <button
                   type="button"
                   onClick={() => setAdjusting(m)}
                   aria-label="Carica o scarica giacenza"
-                  title="Carica / scarica giacenza"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-lc-accent/20 text-lc-olive transition-transform active:scale-90"
+                  className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-btn bg-lc-accent/20 px-3 text-sm font-semibold text-lc-olive transition-transform active:scale-95"
                 >
-                  <PackageMinus size={16} />
+                  <PackageMinus size={15} /> Giacenza
                 </button>
-                <SecondaryButton onClick={() => setEditing(m)}>Modifica</SecondaryButton>
+                <SecondaryButton className="!py-1.5 flex-1 !text-sm" onClick={() => setEditing(m)}>
+                  Modifica
+                </SecondaryButton>
               </div>
             </Card>
           );

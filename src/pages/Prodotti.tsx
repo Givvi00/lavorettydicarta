@@ -15,6 +15,7 @@ import {
   EmptyState,
 } from '@/components/ui/primitives';
 import { Package, Tags, Trash2, Clock, Sparkles } from 'lucide-react';
+import { PageBar } from '@/components/ui/PageBar';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { CreateProductByVoiceModal } from '@/components/CreateProductByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
@@ -41,42 +42,47 @@ export function Prodotti() {
 
   return (
     <div className="flex animate-slide-up flex-col gap-4 p-4 md:gap-5 md:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Prodotti</span></h1>
-        <div className="flex flex-wrap gap-2">
-          <SecondaryButton className="!px-3 sm:!px-5" onClick={() => setManagingCategories(true)}>
-            <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
-          </SecondaryButton>
-          <SecondaryButton
-            onClick={() => setCreatingByVoice(true)}
-            className="lc-ai-gradient border-transparent !px-3 text-lc-accent-text sm:!px-5"
-          >
-            <Sparkles size={16} className="mr-1 inline -mt-0.5" /> Racconta
-          </SecondaryButton>
-          <PrimaryButton className="!px-3 sm:!px-5" data-tour="btn-nuovo" onClick={() => setCreating(true)}>+ Nuovo</PrimaryButton>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Input
-          className="sm:max-w-xs"
-          placeholder="Cerca prodotto..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <Select
-          className="sm:max-w-xs"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="">Tutte le categorie</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.name}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
-      </div>
+      <PageBar
+        title={<span className="lc-marker">Prodotti</span>}
+        actions={
+          <>
+            <SecondaryButton onClick={() => setManagingCategories(true)}>
+              <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
+            </SecondaryButton>
+            <SecondaryButton
+              onClick={() => setCreatingByVoice(true)}
+              className="lc-ai-gradient border-transparent text-lc-accent-text"
+            >
+              <Sparkles size={16} className="mr-1 inline -mt-0.5" /> Racconta
+            </SecondaryButton>
+            <PrimaryButton data-tour="btn-nuovo" onClick={() => setCreating(true)}>
+              + Nuovo
+            </PrimaryButton>
+          </>
+        }
+        filters={
+          <>
+            <Input
+              className="min-w-0 flex-1 md:max-w-xs md:flex-none"
+              placeholder="Cerca prodotto..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <Select
+              className="min-w-0 flex-1 md:max-w-xs md:flex-none"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              <option value="">Tutte le categorie</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 && (
