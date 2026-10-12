@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Modal, Field, Input, PrimaryButton, SecondaryButton } from '@/components/ui/primitives';
 import { useSettings } from '@/hooks/useSettings';
+import { ChangelogSheet } from '@/components/WhatsNew';
+import { APP_VERSION, CHANGELOG } from '@/data/changelog';
 
 export function SettingsModal({
   open,
@@ -12,6 +14,7 @@ export function SettingsModal({
   onReplayTour: () => void;
 }) {
   const { rates, setRates } = useSettings();
+  const [changelogOpen, setChangelogOpen] = useState(false);
   const [designRate, setDesignRate] = useState(rates.designRate);
   const [productionRate, setProductionRate] = useState(rates.productionRate);
 
@@ -48,6 +51,12 @@ export function SettingsModal({
         <SecondaryButton type="button" onClick={onReplayTour}>
           Rivedi il tour guidato
         </SecondaryButton>
+        <SecondaryButton type="button" onClick={() => setChangelogOpen(true)}>
+          Novità · versione {APP_VERSION}
+        </SecondaryButton>
+        {changelogOpen && (
+          <ChangelogSheet entries={CHANGELOG} title="Tutte le novità" onClose={() => setChangelogOpen(false)} />
+        )}
 
         <div className="mt-2 flex items-center justify-end">
           <PrimaryButton type="submit">Salva</PrimaryButton>

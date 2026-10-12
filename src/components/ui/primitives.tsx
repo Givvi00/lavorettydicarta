@@ -92,7 +92,43 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
+// Campo numerico: con valore 0 si svuota al tocco (così non resta "05") e gli zeri iniziali vengono tolti mentre si scrive
+function NumberInput(props: InputHTMLAttributes<HTMLInputElement>) {
+  const { value, onChange, onFocus, onBlur, ...rest } = props;
+  const [draft, setDraft] = useState(String(value ?? ''));
+  const asNumber = (s: string) => parseFloat(s) || 0;
+
+  // allinea il testo se il valore cambia da fuori (es. costo calcolato dalla confezione)
+  useEffect(() => {
+    setDraft((d) => (asNumber(d) === (Number(value) || 0) ? d : String(value ?? '')));
+  }, [value]);
+
+  return (
+    <input
+      {...rest}
+      placeholder={rest.placeholder ?? '0'}
+      value={draft}
+      onFocus={(e) => {
+        if (asNumber(draft) === 0) setDraft('');
+        onFocus?.(e);
+      }}
+      onBlur={(e) => {
+        if (draft === '' && !rest.disabled) setDraft(String(value ?? '') === '0' ? '0' : draft);
+        onBlur?.(e);
+      }}
+      onChange={(e) => {
+        const clean = e.target.value.replace(/^(-?)0+(?=\d)/, '$1');
+        if (clean !== e.target.value) e.target.value = clean;
+        setDraft(clean);
+        onChange?.(e);
+      }}
+      className={`rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-lc-text outline-none transition-[border-color,box-shadow] focus:border-lc-accent focus:ring-4 focus:ring-lc-accent/25 ${rest.className ?? ''}`}
+    />
+  );
+}
+
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+  if (props.type === 'number') return <NumberInput {...props} />;
   return (
     <input
       {...props}

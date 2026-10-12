@@ -9,6 +9,8 @@ import { currentAccount, finishGoogle, hasStoredSession, signOut, GOOGLE_RETURN,
 import { Dashboard } from '@/pages/Dashboard';
 import { Clienti } from '@/pages/Clienti';
 import { Materiali } from '@/pages/Materiali';
+import { ChangelogSheet } from '@/components/WhatsNew';
+import { markVersionSeen, readSeenVersion, unseenChanges, type ChangelogEntry } from '@/data/changelog';
 import logo from '@/assets/logo.png';
 
 const Prodotti = lazy(() => import('@/pages/Prodotti').then((m) => ({ default: m.Prodotti })));
@@ -32,6 +34,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [account, setAccount] = useState<Account | null | 'loading'>('loading');
   const [tourActive, setTourActive] = useState(false);
+  const [news, setNews] = useState<ChangelogEntry[]>([]);
   const { ready, load } = useStore();
   const { theme, toggleTheme } = useTheme();
 
@@ -62,6 +65,20 @@ function App() {
     } catch {
       /* localStorage non disponibile: nessun tour automatico */
     }
+  }, [ready]);
+
+  // Popup "Novità" dopo un aggiornamento (non al primo accesso, quando parte il tour)
+  useEffect(() => {
+    if (!ready) return;
+    let tourDone = false;
+    try {
+      tourDone = !!localStorage.getItem('lc-onboarding-done');
+    } catch {
+      /* ignora */
+    }
+    const pending = unseenChanges(readSeenVersion(), !tourDone && !DEMO);
+    if (pending.length > 0) setNews(pending);
+    else markVersionSeen();
   }, [ready]);
 
   function finishTour() {
@@ -227,6 +244,16 @@ function App() {
         }}
       />
       <OnboardingTour active={tourActive} onFinish={finishTour} />
+      {news.length > 0 && !tourActive && (
+        <ChangelogSheet
+          entries={news}
+          title="Novità nell'app"
+          onClose={() => {
+            markVersionSeen();
+            setNews([]);
+          }}
+        />
+      )}
     </div>
   );
 }
