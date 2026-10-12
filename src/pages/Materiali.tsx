@@ -17,6 +17,7 @@ import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart, Tags, PackageMinu
 import { PhotoPicker, Lightbox } from '@/components/ui/PhotoPicker';
 import { ScanReceiptModal } from '@/components/ScanReceiptModal';
 import { formatEUR, aggregateMaterialShortfalls, effectiveUnitCost } from '@/utils/calc';
+import { UNITS } from '@/data/units';
 import type { Material } from '@/types';
 
 /** Valori distinti (ordinati) di un campo testuale dei materiali, es. categorie o fornitori */
@@ -442,7 +443,14 @@ export function MaterialForm({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Unità di misura">
-            <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="pz, foglio, metro..." />
+            <Select value={unit} onChange={(e) => setUnit(e.target.value)}>
+              {/* se un materiale ha un'unità fuori elenco la mostriamo comunque, finché non la cambi */}
+              {[...(UNITS.includes(unit as (typeof UNITS)[number]) ? [] : [unit]), ...UNITS].map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </Select>
           </Field>
           <Field label={costPerUnitFromPackage != null ? 'Costo per unità (€) — dalla confezione' : 'Costo per unità (€)'}>
             <Input

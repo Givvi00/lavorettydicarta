@@ -11,6 +11,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '1.2',
+    date: '2026-10-12',
+    items: ["L'unità di misura dei materiali si sceglie da un menù (pz, Fogli, Metri, cm, Rotoli, Confezioni, g, kg, ml), così sono sempre scritte allo stesso modo."],
+  },
+  {
     version: '1.1',
     date: '2026-10-12',
     items: [
