@@ -45,6 +45,21 @@ export interface Category {
   createdAt: number;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  at: number;
+}
+
+/** Una conversazione con l'assistente AI */
+export interface Chat {
+  id: ID;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface BomLine {
   materialId: ID;
   quantity: number; // quantità di materiale per 1 unità di prodotto

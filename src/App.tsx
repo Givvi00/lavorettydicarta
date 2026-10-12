@@ -10,6 +10,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { Clienti } from '@/pages/Clienti';
 import { Materiali } from '@/pages/Materiali';
 import { ChangelogSheet } from '@/components/WhatsNew';
+import { AssistantChat } from '@/components/AssistantChat';
 import { PrimaryButton } from '@/components/ui/primitives';
 import { markVersionSeen, readSeenVersion, unseenChanges, type ChangelogEntry } from '@/data/changelog';
 import logo from '@/assets/logo.png';
@@ -245,6 +246,7 @@ function App() {
         }}
       />
       <OnboardingTour active={tourActive} onFinish={finishTour} />
+      <AssistantChat page={TABS.find((t) => t.id === tab)?.label ?? ''} hidden={tourActive || settingsOpen} />
       {stockNotice && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4" onClick={clearStockNotice}>
           <div className="w-full max-w-sm rounded-card border-2 border-lc-border bg-lc-surface p-5 shadow-lift" onClick={(e) => e.stopPropagation()}>

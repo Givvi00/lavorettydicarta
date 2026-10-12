@@ -44,6 +44,30 @@ export async function callGroqChat(prompt: string): Promise<string> {
   return content;
 }
 
+/** Conversazione con il modello: un prompt di sistema e i messaggi di Paola/assistente. Ritorna la risposta. */
+export async function callGroqConversation(
+  system: string,
+  messages: { role: 'user' | 'assistant'; content: string }[]
+): Promise<string> {
+  const apiKey = await getApiKey();
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: GROQ_TEXT_MODEL,
+      temperature: 0.4,
+      messages: [{ role: 'system', content: system }, ...messages],
+    }),
+  });
+
+  if (!response.ok) await handleErrorResponse(response, 'nella risposta');
+
+  const data = await response.json();
+  const content: string | undefined = data?.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Nessuna risposta ricevuta, riprova.');
+  return content.trim();
+}
+
 /** Trascrive un audio (vocale registrato nel browser) in testo tramite Whisper (Groq), in italiano. */
 export async function transcribeVoice(audio: Blob): Promise<string> {
   const text = await transcribeAudio(audio);

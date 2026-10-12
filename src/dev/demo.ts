@@ -1,8 +1,8 @@
 // Solo per lo sviluppo in locale (aprendo l'app con ?demo): dati d'esempio in memoria, senza login
 // e senza toccare il database vero. Nel sito pubblicato questo file non viene incluso.
-import type { Category, Customer, Material, Order, Product } from '../types';
+import type { Category, Chat, Customer, Material, Order, Product } from '../types';
 
-type StoreName = 'customers' | 'materials' | 'products' | 'orders' | 'categories';
+type StoreName = 'customers' | 'materials' | 'products' | 'orders' | 'categories' | 'chats';
 
 const DAY = 24 * 60 * 60 * 1000;
 const now = new Date();
@@ -76,7 +76,9 @@ const orders: Order[] = [
   order('o9', 'c4', 'consegnato', Date.now() - 50 * DAY, [['p2', 2]]),
 ];
 
-const data: Record<StoreName, { id: string }[]> = { customers, materials, products, orders, categories };
+const chats: Chat[] = [];
+
+const data: Record<StoreName, { id: string }[]> = { customers, materials, products, orders, categories, chats };
 
 export async function demoGetAll(store: StoreName): Promise<unknown[]> {
   return structuredClone(data[store]);

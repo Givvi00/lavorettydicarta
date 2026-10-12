@@ -11,6 +11,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '1.6',
+    date: '2026-10-12',
+    items: [
+      "Nuovo assistente AI: il pulsante con le stelline in basso a destra apre una chat. Chiedi consigli su prezzi, tempi, materiali e ordini e ti risponde guardando i tuoi prodotti, i tuoi costi e le tue giacenze.",
+      "Puoi scrivere o parlare, e le chat restano salvate: le ritrovi dall'icona dell'orologio.",
+    ],
+  },
+  {
     version: '1.5',
     date: '2026-10-12',
     items: [

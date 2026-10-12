@@ -1,9 +1,9 @@
 // Dati del gestionale salvati su Supabase (database condiviso), non più solo nel browser:
 // così sono persistenti davvero e visibili da chiunque sia autorizzato, su qualsiasi dispositivo.
 import { getClient } from './account';
-import type { Customer, Material, Product, Order, Category } from '../types';
+import type { Customer, Material, Product, Order, Category, Chat } from '../types';
 
-type StoreName = 'customers' | 'materials' | 'products' | 'orders' | 'categories';
+type StoreName = 'customers' | 'materials' | 'products' | 'orders' | 'categories' | 'chats';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
@@ -148,8 +148,14 @@ const orders: Mapper<Order> = {
   }),
 };
 
+const chats: Mapper<Chat> = {
+  table: 'chats',
+  toDb: (c) => ({ id: c.id, title: c.title, messages: c.messages, created_at: c.createdAt, updated_at: c.updatedAt }),
+  fromDb: (r) => ({ id: r.id, title: r.title, messages: r.messages ?? [], createdAt: r.created_at, updatedAt: r.updated_at }),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MAPPERS: Record<StoreName, Mapper<any>> = { customers, materials, products, orders, categories };
+const MAPPERS: Record<StoreName, Mapper<any>> = { customers, materials, products, orders, categories, chats };
 
 type ValueOf<T extends StoreName> = T extends 'customers'
   ? Customer
@@ -159,7 +165,9 @@ type ValueOf<T extends StoreName> = T extends 'customers'
       ? Product
       : T extends 'orders'
         ? Order
-        : Category;
+        : T extends 'chats'
+          ? Chat
+          : Category;
 
 // Solo in sviluppo locale con ?demo: dati d'esempio in memoria (vedi src/dev/demo.ts). Nel sito pubblicato
 // import.meta.env.DEV è falso e questi rami spariscono dalla build.

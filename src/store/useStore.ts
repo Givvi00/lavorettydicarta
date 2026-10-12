@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import * as db from '@/services/db';
 import { newId, materialNeedsFor, STOCK_DEDUCTED_STATUSES } from '@/utils/calc';
-import type { Customer, Material, Product, Order, OrderStatus, Category } from '@/types';
+import type { Customer, Material, Product, Order, OrderStatus, Category, Chat } from '@/types';
 
 interface LcState {
   ready: boolean;
@@ -10,6 +10,7 @@ interface LcState {
   products: Product[];
   orders: Order[];
   categories: Category[];
+  chats: Chat[];
 
   load: () => Promise<void>;
 
@@ -27,6 +28,8 @@ interface LcState {
 
   upsertOrder: (o: Partial<Order> & { id?: string }) => Promise<Order>;
   deleteOrder: (id: string) => Promise<void>;
+  upsertChat: (chat: Chat) => Promise<void>;
+  deleteChat: (id: string) => Promise<void>;
   /** Materiali che non bastavano all'ultimo scarico (da mostrare a chi ha salvato l'ordine) */
   stockNotice: StockMissing[] | null;
   clearStockNotice: () => void;
@@ -50,14 +53,17 @@ export const useStore = create<LcState>((set, get) => ({
   products: [],
   orders: [],
   categories: [],
+  chats: [],
 
   load: async () => {
-    const [customers, materials, products, orders, categories] = await Promise.all([
+    const [customers, materials, products, orders, categories, chats] = await Promise.all([
       db.getAll('customers'),
       db.getAll('materials'),
       db.getAll('products'),
       db.getAll('orders'),
       db.getAll('categories'),
+      // le chat sono un extra: se la tabella non c'è ancora l'app funziona lo stesso
+      db.getAll('chats').catch(() => [] as Chat[]),
     ]);
     set({
       customers: customers.sort((a, b) => a.name.localeCompare(b.name)),
@@ -65,6 +71,7 @@ export const useStore = create<LcState>((set, get) => ({
       products: products.sort((a, b) => a.name.localeCompare(b.name)),
       orders: orders.sort((a, b) => b.createdAt - a.createdAt),
       categories: categories.sort((a, b) => a.name.localeCompare(b.name)),
+      chats: chats.sort((a, b) => b.updatedAt - a.updatedAt),
       ready: true,
     });
   },
@@ -250,6 +257,16 @@ export const useStore = create<LcState>((set, get) => ({
       ),
     }));
     return record;
+  },
+
+  upsertChat: async (chat) => {
+    await db.put('chats', chat);
+    set((s) => ({ chats: [chat, ...s.chats.filter((c) => c.id !== chat.id)].sort((a, b) => b.updatedAt - a.updatedAt) }));
+  },
+
+  deleteChat: async (id) => {
+    await db.remove('chats', id);
+    set((s) => ({ chats: s.chats.filter((c) => c.id !== id) }));
   },
 
   deleteOrder: async (id) => {
