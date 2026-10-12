@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as db from '@/services/db';
-import { newId } from '@/utils/calc';
+import { newId, materialNeedsFor, STOCK_DEDUCTED_STATUSES } from '@/utils/calc';
 import type { Customer, Material, Product, Order, OrderStatus, Category } from '@/types';
 
 interface LcState {
@@ -27,11 +27,24 @@ interface LcState {
 
   upsertOrder: (o: Partial<Order> & { id?: string }) => Promise<Order>;
   deleteOrder: (id: string) => Promise<void>;
+  /** Materiali che non bastavano all'ultimo scarico (da mostrare a chi ha salvato l'ordine) */
+  stockNotice: StockMissing[] | null;
+  clearStockNotice: () => void;
   setOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
 }
 
+export interface StockMissing {
+  name: string;
+  unit: string;
+  missing: number;
+}
+
+const round4 = (n: number) => Math.round(n * 10000) / 10000;
+
 export const useStore = create<LcState>((set, get) => ({
   ready: false,
+  stockNotice: null,
+  clearStockNotice: () => set({ stockNotice: null }),
   customers: [],
   materials: [],
   products: [],
@@ -183,9 +196,52 @@ export const useStore = create<LcState>((set, get) => ({
       discount: input.discount ?? existing?.discount ?? 0,
       deliveryDate: input.deliveryDate ?? existing?.deliveryDate,
       notes: input.notes ?? existing?.notes,
+      isGift: input.isGift ?? existing?.isGift ?? false,
+      consumed: existing?.consumed,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
+
+    // Giacenze: da "In lavorazione" in poi i materiali della distinta base sono scaricati; tornando indietro o
+    // annullando vengono rimessi. Si salvano le quantità davvero scaricate, così non si scarica mai due volte.
+    const shouldDeduct = STOCK_DEDUCTED_STATUSES.includes(record.status);
+    const target = shouldDeduct ? materialNeedsFor(record.items, get().products) : new Map<string, number>();
+    const prev = existing?.consumed ?? {};
+    const consumed: Record<string, number> = {};
+    const missing: StockMissing[] = [];
+    const changed: Material[] = [];
+    for (const id of new Set([...Object.keys(prev), ...target.keys()])) {
+      const material = get().materials.find((m) => m.id === id);
+      const had = prev[id] ?? 0;
+      const want = target.get(id) ?? 0;
+      if (!material) {
+        if (had > 0) consumed[id] = had;
+        continue;
+      }
+      let now2 = had;
+      let stock = material.stockQty;
+      if (want > had) {
+        const take = Math.min(want - had, Math.max(0, stock));
+        now2 = had + take;
+        stock -= take;
+        if (take < want - had) missing.push({ name: material.name, unit: material.unit, missing: round4(want - had - take) });
+      } else if (want < had) {
+        stock += had - want;
+        now2 = want;
+      }
+      if (stock !== material.stockQty) changed.push({ ...material, stockQty: round4(stock), updatedAt: now });
+      if (now2 > 0) consumed[id] = round4(now2);
+    }
+    // oggetto vuoto = "già elaborato" (nessun materiale da scaricare); undefined = non ancora scaricato
+    record.consumed = shouldDeduct ? consumed : undefined;
+
+    for (const m of changed) await db.put('materials', m);
+    if (changed.length > 0) {
+      set((s) => ({
+        materials: s.materials.map((m) => changed.find((c) => c.id === m.id) ?? m),
+      }));
+    }
+    set({ stockNotice: missing.length > 0 ? missing : null });
     await db.put('orders', record);
     set((s) => ({
       orders: [...s.orders.filter((o) => o.id !== record.id), record].sort(
@@ -196,6 +252,17 @@ export const useStore = create<LcState>((set, get) => ({
   },
 
   deleteOrder: async (id) => {
+    // se l'ordine aveva già scaricato materiali, rimettili in magazzino
+    const order = get().orders.find((o) => o.id === id);
+    if (order?.consumed) {
+      const changed: Material[] = [];
+      for (const [materialId, qty] of Object.entries(order.consumed)) {
+        const m = get().materials.find((x) => x.id === materialId);
+        if (m) changed.push({ ...m, stockQty: round4(m.stockQty + qty), updatedAt: Date.now() });
+      }
+      for (const m of changed) await db.put('materials', m);
+      set((s) => ({ materials: s.materials.map((m) => changed.find((c) => c.id === m.id) ?? m) }));
+    }
     await db.remove('orders', id);
     set((s) => ({ orders: s.orders.filter((o) => o.id !== id) }));
   },

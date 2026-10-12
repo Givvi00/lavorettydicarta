@@ -85,6 +85,8 @@ export interface Order {
   discount: number; // valore assoluto scontato sul totale
   deliveryDate?: number;
   notes?: string;
+  isGift?: boolean; // regalo/omaggio: consuma materiali ma non è un ricavo
+  consumed?: Record<ID, number>; // materiali già scaricati dal magazzino per questo ordine (materialId → quantità)
   createdAt: number;
   updatedAt: number;
 }

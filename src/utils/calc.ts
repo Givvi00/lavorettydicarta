@@ -9,8 +9,8 @@ export function effectiveUnitCost(material: Pick<Material, 'unitCost' | 'package
 }
 
 /** Gli ordini che contano come lavoro/incasso vero: i preventivi non sono certi, gli annullati non esistono più. */
-export function countsAsRevenue(order: Pick<Order, 'status'>): boolean {
-  return order.status !== 'preventivo' && order.status !== 'annullato';
+export function countsAsRevenue(order: Pick<Order, 'status'> & { isGift?: boolean }): boolean {
+  return !order.isGift && order.status !== 'preventivo' && order.status !== 'annullato';
 }
 
 export function materialCostOf(product: Pick<Product, 'bom'>, materials: Material[]): number {
@@ -58,7 +58,7 @@ export interface MaterialShortfall {
 }
 
 /** Quanto materiale serve in totale per realizzare questi articoli, per materialId */
-function materialNeedsFor(items: Pick<OrderItem, 'productId' | 'quantity'>[], products: Product[]): Map<string, number> {
+export function materialNeedsFor(items: Pick<OrderItem, 'productId' | 'quantity'>[], products: Product[]): Map<string, number> {
   const needs = new Map<string, number>();
   for (const item of items) {
     const product = products.find((p) => p.id === item.productId);
@@ -88,10 +88,14 @@ export function materialShortfallsFor(
 
 // Stati che contano come "lavoro da onorare davvero": i preventivi non sono ancora certi,
 // quindi non riservano materiale nella lista della spesa.
-const STATUSES_COUNTED_FOR_SHOPPING: OrderStatus[] = ['confermato', 'in_lavorazione', 'pronto'];
+// Da "In lavorazione" in poi i materiali dell'ordine sono scaricati dal magazzino.
+export const STOCK_DEDUCTED_STATUSES: OrderStatus[] = ['in_lavorazione', 'pronto', 'consegnato'];
 
 /** Materiali mancanti per completare TUTTI gli ordini confermati in corso (non i preventivi) */
 export function aggregateMaterialShortfalls(orders: Order[], products: Product[], materials: Material[]): MaterialShortfall[] {
-  const items = orders.filter((o) => STATUSES_COUNTED_FOR_SHOPPING.includes(o.status)).flatMap((o) => o.items);
+  // contano solo gli ordini non ancora scaricati: gli altri hanno già consumato i materiali dalla giacenza
+  const items = orders
+    .filter((o) => o.status === 'confermato' || (STOCK_DEDUCTED_STATUSES.includes(o.status) && !o.consumed))
+    .flatMap((o) => o.items);
   return materialShortfallsFor(items, products, materials).filter((s) => s.missing > 0);
 }

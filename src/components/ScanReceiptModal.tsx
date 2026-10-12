@@ -80,7 +80,9 @@ export function ScanReceiptModal({ open, onClose }: { open: boolean; onClose: ()
         if (row.action !== 'update' || !row.materialId) continue;
         const existing = materials.find((m) => m.id === row.materialId);
         if (!existing) continue;
-        await upsertMaterial({ id: existing.id, stockQty: existing.stockQty + row.quantity });
+        // la giacenza è in pezzi singoli: se il materiale ha una confezione, ogni articolo comprato ne vale packageQty
+        const perPack = existing.packageQty && existing.packagePrice ? existing.packageQty : 1;
+        await upsertMaterial({ id: existing.id, stockQty: existing.stockQty + row.quantity * perPack });
       }
       reset();
       onClose();

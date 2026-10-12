@@ -17,7 +17,7 @@ import { ClipboardList, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-rea
 import { PageBar } from '@/components/ui/PageBar';
 import { CreateOrderByVoiceModal } from '@/components/CreateOrderByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
-import { formatEUR, orderSubtotal, orderTotal, newId, materialShortfallsFor } from '@/utils/calc';
+import { formatEUR, orderSubtotal, orderTotal, newId, materialShortfallsFor, STOCK_DEDUCTED_STATUSES } from '@/utils/calc';
 import type { Order, OrderItem, OrderStatus } from '@/types';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -96,9 +96,10 @@ export function Ordini() {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold">{customer?.name ?? 'Cliente sconosciuto'}</p>
                   <Badge tone={STATUS_TONE[o.status]}>{STATUS_LABEL[o.status]}</Badge>
+                  {o.isGift && <Badge tone="pink">Regalo</Badge>}
                 </div>
                 <p className="text-sm text-lc-muted">
-                  {o.items.length} articoli · {formatEUR(orderTotal(o))}
+                  {o.items.length} articoli · {o.isGift ? 'non conta negli incassi' : formatEUR(orderTotal(o))}
                   {o.deliveryDate ? ` · consegna ${new Date(o.deliveryDate).toLocaleDateString('it-IT')}` : ''}
                 </p>
               </div>
@@ -175,13 +176,16 @@ function OrderForm({
     initial?.deliveryDate ? new Date(initial.deliveryDate).toISOString().slice(0, 10) : ''
   );
   const [notes, setNotes] = useState(initial?.notes ?? '');
+  const [isGift, setIsGift] = useState(initial?.isGift ?? false);
   const { rates } = useSettings();
 
   const subtotal = orderSubtotal({ items });
   const total = orderTotal({ items, discount });
   const designHoursTotal = items.reduce((sum, it) => sum + (it.designHours ?? 0), 0);
   const designCostTotal = designHoursTotal * rates.designRate;
-  const shortfalls = materialShortfallsFor(items, products, materials).filter((s) => s.missing > 0);
+  // se i materiali sono già stati scaricati dal magazzino, la giacenza li ha già tolti: niente confronto
+  const alreadyDeducted = !!initial?.consumed && STOCK_DEDUCTED_STATUSES.includes(initial.status) && STOCK_DEDUCTED_STATUSES.includes(status);
+  const shortfalls = alreadyDeducted ? [] : materialShortfallsFor(items, products, materials).filter((s) => s.missing > 0);
 
   function addItem() {
     if (products.length === 0) return;
@@ -220,6 +224,7 @@ function OrderForm({
             discount,
             deliveryDate: deliveryDate ? new Date(deliveryDate).getTime() : undefined,
             notes,
+            isGift,
           });
         }}
       >
@@ -315,7 +320,12 @@ function OrderForm({
           </div>
         </div>
 
-        {items.length > 0 && (
+        {items.length > 0 && alreadyDeducted && (
+          <p className="rounded-btn border border-lc-border p-2 text-sm text-lc-muted">
+            I materiali di quest'ordine sono già stati scaricati dal magazzino.
+          </p>
+        )}
+        {items.length > 0 && !alreadyDeducted && (
           shortfalls.length === 0 ? (
             <p className="flex items-center gap-1.5 rounded-btn border border-lc-success/30 bg-lc-success/10 p-2 text-sm font-semibold text-lc-success">
               <CheckCircle2 size={16} /> Hai tutti i materiali necessari per quest'ordine.
@@ -339,6 +349,11 @@ function OrderForm({
             </div>
           )
         )}
+
+        <label className="flex items-center gap-2 rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-sm font-semibold">
+          <input type="checkbox" checked={isGift} onChange={(e) => setIsGift(e.target.checked)} className="h-4 w-4 accent-[rgb(var(--lc-accent))]" />
+          Regalo / omaggio (consuma i materiali ma non conta negli incassi)
+        </label>
 
         <Field label="Sconto (€)">
           <Input

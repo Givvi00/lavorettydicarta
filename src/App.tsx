@@ -10,6 +10,7 @@ import { Dashboard } from '@/pages/Dashboard';
 import { Clienti } from '@/pages/Clienti';
 import { Materiali } from '@/pages/Materiali';
 import { ChangelogSheet } from '@/components/WhatsNew';
+import { PrimaryButton } from '@/components/ui/primitives';
 import { markVersionSeen, readSeenVersion, unseenChanges, type ChangelogEntry } from '@/data/changelog';
 import logo from '@/assets/logo.png';
 
@@ -35,7 +36,7 @@ function App() {
   const [account, setAccount] = useState<Account | null | 'loading'>('loading');
   const [tourActive, setTourActive] = useState(false);
   const [news, setNews] = useState<ChangelogEntry[]>([]);
-  const { ready, load } = useStore();
+  const { ready, load, stockNotice, clearStockNotice } = useStore();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -244,6 +245,26 @@ function App() {
         }}
       />
       <OnboardingTour active={tourActive} onFinish={finishTour} />
+      {stockNotice && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4" onClick={clearStockNotice}>
+          <div className="w-full max-w-sm rounded-card border-2 border-lc-border bg-lc-surface p-5 shadow-lift" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-lg font-semibold">Giacenza insufficiente</h3>
+            <p className="mt-1 text-sm text-lc-muted">
+              Ho scaricato quello che c'era (fino a zero), ma per questi materiali non bastava:
+            </p>
+            <ul className="mt-3 flex flex-col gap-1 text-sm">
+              {stockNotice.map((m) => (
+                <li key={m.name}>
+                  <strong>{m.name}</strong>: mancavano <span className="font-semibold text-lc-danger">{m.missing} {m.unit}</span>
+                </li>
+              ))}
+            </ul>
+            <PrimaryButton type="button" onClick={clearStockNotice} className="mt-4 w-full">
+              Ho capito
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
       {news.length > 0 && !tourActive && (
         <ChangelogSheet
           entries={news}

@@ -217,6 +217,7 @@ export function Materiali() {
 
       {editing && (
         <MaterialForm
+          key={editing.id}
           open={!!editing}
           initial={editing}
           onClose={() => setEditing(null)}
@@ -227,6 +228,12 @@ export function Materiali() {
           onDelete={async () => {
             await deleteMaterial(editing.id);
             setEditing(null);
+          }}
+          onDuplicate={async () => {
+            // la copia parte con giacenza 0 (è un altro articolo) e si apre subito per modificarla
+            const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = editing;
+            const copy = await upsertMaterial({ ...rest, name: `${editing.name} (copia)`, stockQty: 0 });
+            setEditing(copy);
           }}
         />
       )}
@@ -377,12 +384,14 @@ export function MaterialForm({
   onClose,
   onSave,
   onDelete,
+  onDuplicate,
   initial,
 }: {
   open: boolean;
   onClose: () => void;
   onSave: (data: Partial<Material>) => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
   initial?: Partial<Material>;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
@@ -542,7 +551,14 @@ export function MaterialForm({
         </Field>
         <div className="mt-2 flex items-center justify-between">
           {onDelete ? <DangerButton type="button" onClick={onDelete}>Elimina</DangerButton> : <span />}
-          <PrimaryButton type="submit">Salva</PrimaryButton>
+          <div className="flex gap-2">
+            {onDuplicate && (
+              <SecondaryButton type="button" onClick={onDuplicate}>
+                Duplica
+              </SecondaryButton>
+            )}
+            <PrimaryButton type="submit">Salva</PrimaryButton>
+          </div>
         </div>
       </form>
     </Modal>

@@ -11,6 +11,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '1.4',
+    date: '2026-10-12',
+    items: [
+      "Le giacenze si scaricano da sole: quando un ordine passa a \"In lavorazione\" i materiali della distinta base escono dal magazzino. Se lo riporti indietro o lo annulli, tornano. Se non bastano ti avviso.",
+      'Nuova casella "Regalo / omaggio" negli ordini: consuma i materiali ma non conta negli incassi.',
+      'Con le confezioni, lo scontrino aggiunge i pezzi singoli (es. 24 fogli) e non 1 confezione.',
+      'Nuovo pulsante "Duplica" nelle schede di materiali e prodotti.',
+    ],
+  },
+  {
     version: '1.3',
     date: '2026-10-12',
     items: [

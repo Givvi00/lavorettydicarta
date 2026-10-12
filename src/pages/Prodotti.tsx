@@ -141,6 +141,7 @@ export function Prodotti() {
       {editing && (
         <ProductForm
           open={!!editing}
+          key={editing.id}
           initial={editing}
           materials={materials}
           categories={categories}
@@ -153,6 +154,11 @@ export function Prodotti() {
           onDelete={async () => {
             await deleteProduct(editing.id);
             setEditing(null);
+          }}
+          onDuplicate={async () => {
+            const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = editing;
+            const copy = await upsertProduct({ ...rest, name: `${editing.name} (copia)` });
+            setEditing(copy);
           }}
         />
       )}
@@ -264,6 +270,7 @@ function ProductForm({
   onClose,
   onSave,
   onDelete,
+  onDuplicate,
   initial,
   materials,
   categories,
@@ -273,6 +280,7 @@ function ProductForm({
   onClose: () => void;
   onSave: (data: Partial<Product>) => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
   initial?: Product;
   materials: ReturnType<typeof useStore.getState>['materials'];
   categories: Category[];
@@ -583,7 +591,14 @@ function ProductForm({
 
         <div className="mt-2 flex items-center justify-between">
           {onDelete ? <DangerButton type="button" onClick={onDelete}>Elimina</DangerButton> : <span />}
-          <PrimaryButton type="submit">Salva</PrimaryButton>
+          <div className="flex gap-2">
+            {onDuplicate && (
+              <SecondaryButton type="button" onClick={onDuplicate}>
+                Duplica
+              </SecondaryButton>
+            )}
+            <PrimaryButton type="submit">Salva</PrimaryButton>
+          </div>
         </div>
       </form>
     </Modal>
