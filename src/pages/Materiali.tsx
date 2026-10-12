@@ -9,23 +9,46 @@ import {
   Field,
   Input,
   Textarea,
+  Select,
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart } from 'lucide-react';
-import { PhotoPicker } from '@/components/ui/PhotoPicker';
+import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart, Tags, PackageMinus } from 'lucide-react';
+import { PhotoPicker, Lightbox } from '@/components/ui/PhotoPicker';
 import { ScanReceiptModal } from '@/components/ScanReceiptModal';
 import { formatEUR, aggregateMaterialShortfalls, effectiveUnitCost } from '@/utils/calc';
 import type { Material } from '@/types';
+
+/** Valori distinti (ordinati) di un campo testuale dei materiali, es. categorie o fornitori */
+export function distinctValues(materials: Material[], key: 'category' | 'supplier'): string[] {
+  const set = new Set<string>();
+  for (const m of materials) {
+    const v = m[key]?.trim();
+    if (v) set.add(v);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
 
 export function Materiali() {
   const { materials, orders, products, upsertMaterial, deleteMaterial } = useStore();
   const [editing, setEditing] = useState<Material | null>(null);
   const [creating, setCreating] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [managing, setManaging] = useState(false);
+  const [adjusting, setAdjusting] = useState<Material | null>(null);
+  const [zoomPhoto, setZoomPhoto] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [catFilter, setCatFilter] = useState('');
+  const [supFilter, setSupFilter] = useState('');
 
-  const filtered = materials.filter((m) => m.name.toLowerCase().includes(query.toLowerCase()));
+  const categories = distinctValues(materials, 'category');
+  const suppliers = distinctValues(materials, 'supplier');
+  const filtered = materials.filter(
+    (m) =>
+      m.name.toLowerCase().includes(query.toLowerCase()) &&
+      (!catFilter || (catFilter === '__none' ? !m.category?.trim() : m.category?.trim() === catFilter)) &&
+      (!supFilter || (supFilter === '__none' ? !m.supplier?.trim() : m.supplier?.trim() === supFilter))
+  );
   const shoppingList = aggregateMaterialShortfalls(orders, products, materials);
 
   return (
@@ -33,6 +56,9 @@ export function Materiali() {
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h1 className="font-display text-2xl font-semibold md:text-3xl"><span className="lc-marker">Materiali</span></h1>
         <div className="flex flex-wrap gap-2">
+          <SecondaryButton onClick={() => setManaging(true)}>
+            <Tags size={16} className="mr-1 inline -mt-0.5" /> Categorie
+          </SecondaryButton>
           <SecondaryButton data-tour="btn-scontrino" onClick={() => setScanning(true)}>
             <Receipt size={16} className="mr-1 inline -mt-0.5" /> Scontrino
           </SecondaryButton>
@@ -58,12 +84,36 @@ export function Materiali() {
         </Card>
       )}
 
-      <Input
-        className="md:max-w-xs"
-        placeholder="Cerca materiale..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="flex flex-wrap gap-2">
+        <Input
+          className="w-full md:max-w-xs"
+          placeholder="Cerca materiale..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {(categories.length > 0 || suppliers.length > 0) && (
+          <>
+            <Select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} aria-label="Filtra per categoria">
+              <option value="">Tutte le categorie</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+              <option value="__none">Senza categoria</option>
+            </Select>
+            <Select value={supFilter} onChange={(e) => setSupFilter(e.target.value)} aria-label="Filtra per fornitore">
+              <option value="">Tutti i fornitori</option>
+              {suppliers.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+              <option value="__none">Senza fornitore</option>
+            </Select>
+          </>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 && (
@@ -73,10 +123,18 @@ export function Materiali() {
           const low = m.minStock != null && m.stockQty <= m.minStock;
           return (
             <Card key={m.id} lift className="flex items-center gap-3">
+              {m.photo && (
+                <button
+                  type="button"
+                  aria-label="Ingrandisci foto"
+                  onClick={() => setZoomPhoto(m.photo!)}
+                  className="shrink-0"
+                >
+                  <img src={m.photo} alt="" className="h-11 w-11 cursor-zoom-in rounded-btn object-cover" />
+                </button>
+              )}
               <div onClick={() => setEditing(m)} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left">
-                {m.photo ? (
-                  <img src={m.photo} alt="" className="h-11 w-11 shrink-0 rounded-btn object-cover" />
-                ) : (
+                {!m.photo && (
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-lc-accent/20 text-lc-olive">
                     <Boxes size={18} />
                   </span>
@@ -84,6 +142,7 @@ export function Materiali() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{m.name}</p>
+                    {m.category && <Badge>{m.category}</Badge>}
                     {low && <Badge tone="danger">scorta bassa</Badge>}
                   </div>
                   <p className="text-sm text-lc-muted">
@@ -110,6 +169,15 @@ export function Materiali() {
                     <ExternalLink size={16} />
                   </a>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setAdjusting(m)}
+                  aria-label="Carica o scarica giacenza"
+                  title="Carica / scarica giacenza"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-lc-accent/20 text-lc-olive transition-transform active:scale-90"
+                >
+                  <PackageMinus size={16} />
+                </button>
                 <SecondaryButton onClick={() => setEditing(m)}>Modifica</SecondaryButton>
               </div>
             </Card>
@@ -145,7 +213,143 @@ export function Materiali() {
       )}
 
       {scanning && <ScanReceiptModal open={scanning} onClose={() => setScanning(false)} />}
+      {managing && <ManageGroupsModal onClose={() => setManaging(false)} />}
+      {adjusting && <StockAdjustModal material={adjusting} onClose={() => setAdjusting(null)} />}
+      {zoomPhoto && <Lightbox src={zoomPhoto} onClose={() => setZoomPhoto(null)} />}
     </div>
+  );
+}
+
+/** Rinomina o svuota categorie e fornitori in blocco (aggiorna tutti i materiali che le usano) */
+function ManageGroupsModal({ onClose }: { onClose: () => void }) {
+  const { materials, upsertMaterial } = useStore();
+  const [kind, setKind] = useState<'category' | 'supplier'>('category');
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const values = distinctValues(materials, kind);
+
+  async function apply(from: string, to: string) {
+    setBusy(true);
+    try {
+      for (const m of materials.filter((x) => x[kind]?.trim() === from)) {
+        await upsertMaterial({ id: m.id, [kind]: to.trim() });
+      }
+      setDrafts((d) => {
+        const { [from]: _gone, ...rest } = d;
+        return rest;
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Categorie e fornitori" confirmClose={false}>
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-2">
+          <SecondaryButton type="button" onClick={() => setKind('category')} className={kind === 'category' ? '!bg-lc-accent !text-lc-accent-text' : ''}>
+            Categorie
+          </SecondaryButton>
+          <SecondaryButton type="button" onClick={() => setKind('supplier')} className={kind === 'supplier' ? '!bg-lc-accent !text-lc-accent-text' : ''}>
+            Fornitori
+          </SecondaryButton>
+        </div>
+        <p className="text-sm text-lc-muted">
+          Si creano scrivendole nella scheda di un materiale. Qui puoi rinominarle (si aggiornano tutti i materiali) o
+          toglierle.
+        </p>
+        {values.length === 0 && <p className="text-sm text-lc-muted">Ancora nessuna: assegnala da "Modifica" su un materiale.</p>}
+        {values.map((v) => {
+          const count = materials.filter((m) => m[kind]?.trim() === v).length;
+          const draft = drafts[v] ?? v;
+          return (
+            <div key={v} className="flex items-center gap-2">
+              <Input
+                className="min-w-0 flex-1"
+                value={draft}
+                onChange={(e) => setDrafts({ ...drafts, [v]: e.target.value })}
+              />
+              <span className="shrink-0 text-xs text-lc-muted">{count} mat.</span>
+              <SecondaryButton type="button" disabled={busy || !draft.trim() || draft.trim() === v} onClick={() => apply(v, draft)}>
+                Rinomina
+              </SecondaryButton>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => apply(v, '')}
+                className="text-lc-danger"
+                aria-label={`Togli ${v} dai materiali`}
+                title="Togli dai materiali"
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })}
+        <div className="flex justify-end">
+          <PrimaryButton type="button" onClick={onClose}>Fatto</PrimaryButton>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/** Carico/scarico libero della giacenza (consumo fuori ordine, rotture, inventario...) */
+function StockAdjustModal({ material, onClose }: { material: Material; onClose: () => void }) {
+  const { upsertMaterial } = useStore();
+  const [mode, setMode] = useState<'scarico' | 'carico' | 'imposta'>('scarico');
+  const [qty, setQty] = useState(0);
+
+  const next =
+    mode === 'imposta' ? qty : Math.max(0, material.stockQty + (mode === 'carico' ? qty : -qty));
+  const rounded = Math.round(next * 100) / 100;
+
+  return (
+    <Modal open onClose={onClose} title={`Giacenza: ${material.name}`}>
+      <form
+        className="flex flex-col gap-3"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await upsertMaterial({ id: material.id, stockQty: rounded });
+          onClose();
+        }}
+      >
+        <p className="text-sm text-lc-muted">
+          Ora in magazzino: <strong className="text-lc-text">{material.stockQty} {material.unit}</strong>
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {(['scarico', 'carico', 'imposta'] as const).map((m) => (
+            <SecondaryButton
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={mode === m ? '!bg-lc-accent !text-lc-accent-text' : ''}
+            >
+              {m === 'scarico' ? 'Scarica' : m === 'carico' ? 'Carica' : 'Imposta a'}
+            </SecondaryButton>
+          ))}
+        </div>
+        <Field label={`Quantità (${material.unit})`}>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            inputMode="decimal"
+            value={qty}
+            onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
+          />
+        </Field>
+        <p className="text-sm">
+          Dopo: <strong>{rounded} {material.unit}</strong>
+          {mode === 'scarico' && qty > material.stockQty && (
+            <span className="text-lc-danger"> (non può andare sotto zero)</span>
+          )}
+        </p>
+        <div className="flex justify-end">
+          <PrimaryButton type="submit">Conferma</PrimaryButton>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -166,6 +370,8 @@ export function MaterialForm({
   const [unit, setUnit] = useState(initial?.unit ?? 'pz');
   const [unitCost, setUnitCost] = useState(initial?.unitCost ?? 0);
   const [supplier, setSupplier] = useState(initial?.supplier ?? '');
+  const [category, setCategory] = useState(initial?.category ?? '');
+  const allMaterials = useStore((s) => s.materials);
   const [stockQty, setStockQty] = useState(initial?.stockQty ?? 0);
   const [minStock, setMinStock] = useState(initial?.minStock ?? 0);
   const [notes, setNotes] = useState(initial?.notes ?? '');
@@ -188,7 +394,8 @@ export function MaterialForm({
             name: name.trim(),
             unit,
             unitCost: costPerUnitFromPackage ?? unitCost,
-            supplier,
+            supplier: supplier.trim(),
+            category: category.trim(),
             stockQty,
             minStock,
             notes,
@@ -202,8 +409,37 @@ export function MaterialForm({
         <PhotoPicker value={photo} onChange={setPhoto} />
 
         <Field label="Nome">
-          <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+          {/* niente autoFocus: da telefono la tastiera non deve aprirsi da sola */}
+          <Input value={name} onChange={(e) => setName(e.target.value)} required />
         </Field>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Categoria">
+            <Input
+              list="mat-categories"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Carta, Colle, Nastri..."
+            />
+            <datalist id="mat-categories">
+              {distinctValues(allMaterials, 'category').map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+          </Field>
+          <Field label="Fornitore">
+            <Input
+              list="mat-suppliers"
+              value={supplier}
+              onChange={(e) => setSupplier(e.target.value)}
+              placeholder="Amazon, Action..."
+            />
+            <datalist id="mat-suppliers">
+              {distinctValues(allMaterials, 'supplier').map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+          </Field>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Unità di misura">
             <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="pz, foglio, metro..." />
@@ -267,13 +503,6 @@ export function MaterialForm({
             />
           </Field>
         </div>
-        <Field label="Fornitore">
-          <Input
-            value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            placeholder="Amazon, Action..."
-          />
-        </Field>
         <Field label="Link acquisto (es. Amazon, Cricut store...)">
           <Input
             type="url"

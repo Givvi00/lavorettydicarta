@@ -114,6 +114,7 @@ export const useStore = create<LcState>((set, get) => ({
       unit: input.unit ?? existing?.unit ?? 'pz',
       unitCost: input.unitCost ?? existing?.unitCost ?? 0,
       supplier: input.supplier ?? existing?.supplier,
+      category: input.category ?? existing?.category,
       stockQty: input.stockQty ?? existing?.stockQty ?? 0,
       minStock: input.minStock ?? existing?.minStock,
       notes: input.notes ?? existing?.notes,

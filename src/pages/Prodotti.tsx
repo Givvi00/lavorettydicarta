@@ -1,3 +1,4 @@
+import { distinctValues } from '@/pages/Materiali';
 import { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import {
@@ -296,9 +297,20 @@ function ProductForm({
   const productionCostFromHours = productionHours > 0 ? productionHours * rates.productionRate : null;
   const designCostOneTime = designHours > 0 ? designHours * rates.designRate : null;
 
+  // Categorie dei materiali (in ordine) + "" per quelli senza categoria, se ce ne sono: scelta a due passi nella distinta base
+  const bomCategories = (() => {
+    const named = distinctValues(materials, 'category');
+    if (named.length === 0) return [];
+    return materials.some((m) => !m.category?.trim()) ? [...named, ''] : named;
+  })();
+
   function addBomLine() {
     if (materials.length === 0) return;
-    setBom([...bom, { materialId: materials[0].id, quantity: 1 }]);
+    const first =
+      bomCategories.length > 0
+        ? materials.find((m) => (m.category?.trim() ?? '') === bomCategories[0]) ?? materials[0]
+        : materials[0];
+    setBom([...bom, { materialId: first.id, quantity: 1 }]);
   }
 
   function updateBomLine(index: number, patch: Partial<BomLine>) {
@@ -475,17 +487,37 @@ function ProductForm({
               const unitPrice = mat ? effectiveUnitCost(mat) : 0;
               return (
                 <div key={i} className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                    {bomCategories.length > 0 && (
+                      <Select
+                        className="w-full sm:w-40 sm:shrink-0"
+                        aria-label="Categoria materiale"
+                        value={mat?.category?.trim() ?? ''}
+                        onChange={(e) => {
+                          const first = materials.find((m) => (m.category?.trim() ?? '') === e.target.value);
+                          if (first) updateBomLine(i, { materialId: first.id });
+                        }}
+                      >
+                        {bomCategories.map((c) => (
+                          <option key={c} value={c}>
+                            {c || 'Senza categoria'}
+                          </option>
+                        ))}
+                      </Select>
+                    )}
                     <Select
-                      className="flex-1"
+                      className="min-w-0 flex-1"
+                      aria-label="Materiale"
                       value={line.materialId}
                       onChange={(e) => updateBomLine(i, { materialId: e.target.value })}
                     >
-                      {materials.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
+                      {materials
+                        .filter((m) => bomCategories.length === 0 || (m.category?.trim() ?? '') === (mat?.category?.trim() ?? ''))
+                        .map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
                     </Select>
                     <Input
                       type="number"

@@ -27,6 +27,7 @@ export interface Material {
   unit: string; // es. "foglio", "metro", "pz", "ml"
   unitCost: number; // costo di acquisto per unità
   supplier?: string;
+  category?: string; // es. "Carta", "Colle"
   stockQty: number;
   minStock?: number;
   notes?: string;
