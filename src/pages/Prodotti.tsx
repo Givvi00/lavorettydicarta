@@ -11,10 +11,12 @@ import {
   Input,
   Textarea,
   Select,
+  Section,
+  DurationInput,
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Package, Tags, Trash2, Clock, Sparkles } from 'lucide-react';
+import { Package, Tags, Trash2, Sparkles } from 'lucide-react';
 import { PageBar } from '@/components/ui/PageBar';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { CreateProductByVoiceModal } from '@/components/CreateProductByVoiceModal';
@@ -110,12 +112,14 @@ export function Prodotti() {
                   </Badge>
                   {!p.active && <Badge tone="danger">disattivato</Badge>}
                 </div>
-                <p className="text-sm text-lc-muted">
-                  Vendita {formatEUR(p.salePrice)} · Costo {formatEUR(cost)} · Margine{' '}
-                  <span className={margin >= 0 ? 'text-lc-success' : 'text-lc-danger'}>
-                    {formatEUR(margin)}
+                <div className="mt-1 flex flex-col text-sm text-lc-muted">
+                  <span>Vendita {formatEUR(p.salePrice)}</span>
+                  <span>Costo {formatEUR(cost)}</span>
+                  <span>
+                    Margine{' '}
+                    <span className={margin >= 0 ? 'text-lc-success' : 'text-lc-danger'}>{formatEUR(margin)}</span>
                   </span>
-                </p>
+                </div>
                 </div>
               </div>
               <SecondaryButton className="shrink-0" onClick={() => setEditing(p)}>Modifica</SecondaryButton>
@@ -299,16 +303,20 @@ function ProductForm({
   const [active, setActive] = useState(initial?.active ?? true);
   const [bom, setBom] = useState<BomLine[]>(initial?.bom ?? []);
   const [photo, setPhoto] = useState(initial?.photo ?? '');
+  const [openSec, setOpenSec] = useState({ id: true, time: true, mat: true, extra: false });
+  const [submitted, setSubmitted] = useState(false);
   const { rates } = useSettings();
 
   const materialCost = bom.reduce((sum, line) => {
     const mat = materials.find((m) => m.id === line.materialId);
     return sum + (mat ? effectiveUnitCost(mat) * line.quantity : 0);
   }, 0);
-  const totalCost = materialCost + (laborCost || 0);
+  // con un tempo di produzione, la manodopera si calcola da sola (ore × tariffa); senza, vale il costo fisso indicato
+  const laborFromTime = productionHours > 0 ? Math.round(productionHours * rates.productionRate * 100) / 100 : null;
+  const effectiveLabor = laborFromTime ?? (laborCost || 0);
+  const totalCost = materialCost + effectiveLabor;
   const margin = salePrice - totalCost;
   const marginPct = salePrice > 0 ? (margin / salePrice) * 100 : 0;
-  const productionCostFromHours = productionHours > 0 ? productionHours * rates.productionRate : null;
   const designCostOneTime = designHours > 0 ? designHours * rates.designRate : null;
 
   // Categorie dei materiali (in ordine) + "" per quelli senza categoria, se ce ne sono: scelta a due passi nella distinta base
@@ -335,6 +343,42 @@ function ProductForm({
     setBom(bom.filter((_, i) => i !== index));
   }
 
+  // Campi obbligatori: nome e prezzo di vendita
+  const errors: Record<string, string> = {};
+  if (!name.trim()) errors.name = 'Scrivi il nome del prodotto';
+  if (!(salePrice > 0)) errors.salePrice = 'Inserisci il prezzo di vendita';
+  const shown = submitted ? errors : {};
+  const errCls = (k: string) => (shown[k] ? '!border-lc-danger' : '');
+  const pluralMat = bom.length === 1 ? '1 materiale' : `${bom.length} materiali`;
+  const fmtDuration = (h: number) => {
+    const t = Math.round(h * 60);
+    return t >= 60 ? `${Math.floor(t / 60)} h${t % 60 ? ` ${t % 60} min` : ''}` : `${t} min`;
+  };
+
+  function trySave(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitted(true);
+    const keys = Object.keys(errors);
+    if (keys.length > 0) {
+      setOpenSec((sec) => ({ ...sec, id: true }));
+      setTimeout(() => document.getElementById(`prod-${keys[0]}`)?.focus(), 50);
+      return;
+    }
+    onSave({
+      name: name.trim(),
+      category,
+      type,
+      salePrice,
+      laborCost: effectiveLabor,
+      productionHours: productionHours || undefined,
+      designHours: designHours || undefined,
+      description,
+      active,
+      bom,
+      photo,
+    });
+  }
+
   function confirmNewCategory() {
     const name = newCategoryName.trim();
     if (!name) {
@@ -349,31 +393,19 @@ function ProductForm({
 
   return (
     <Modal open={open} onClose={onClose} title={initial ? 'Modifica prodotto' : 'Nuovo prodotto'}>
-      <form
-        className="flex flex-col gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!name.trim()) return;
-          onSave({
-            name: name.trim(),
-            category,
-            type,
-            salePrice,
-            laborCost,
-            productionHours: productionHours || undefined,
-            designHours: designHours || undefined,
-            description,
-            active,
-            bom,
-            photo,
-          });
-        }}
-      >
+      <form className="flex flex-col gap-3" onSubmit={trySave} noValidate>
         <PhotoPicker value={photo} onChange={setPhoto} />
 
-        <Field label="Nome">
-          <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
-        </Field>
+        <Section
+          title="Cos'è"
+          summary={[name.trim() || 'Senza nome', salePrice > 0 ? formatEUR(salePrice) : ''].filter(Boolean).join(' · ')}
+          open={openSec.id}
+          onToggle={(v) => setOpenSec((sec) => ({ ...sec, id: v }))}
+        >
+          {/* niente autoFocus: da telefono la tastiera non deve aprirsi da sola */}
+          <Field label="Nome *" error={shown.name}>
+            <Input id="prod-name" className={errCls('name')} value={name} onChange={(e) => setName(e.target.value)} />
+          </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Categoria">
             {addingCategory ? (
@@ -423,68 +455,55 @@ function ProductForm({
             </Select>
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Prezzo di vendita (€)">
+          <Field label="Prezzo di vendita (€) *" error={shown.salePrice}>
             <Input
+              id="prod-salePrice"
+              className={errCls('salePrice')}
               type="number"
               step="0.01"
+              inputMode="decimal"
               value={salePrice}
               onChange={(e) => setSalePrice(parseFloat(e.target.value) || 0)}
             />
           </Field>
-          <Field label="Costo manodopera (€)">
-            <Input
-              type="number"
-              step="0.01"
-              value={laborCost}
-              onChange={(e) => setLaborCost(parseFloat(e.target.value) || 0)}
-            />
-          </Field>
-        </div>
+        </Section>
 
-        <Card className="flex flex-col gap-2 bg-lc-bg">
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-lc-muted">
-            <Clock size={15} /> Tempo di lavoro (opzionale)
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Ore produzione per pezzo">
-              <Input
-                type="number"
-                step="0.1"
-                value={productionHours}
-                onChange={(e) => setProductionHours(parseFloat(e.target.value) || 0)}
-              />
-            </Field>
-            <Field label="Ore progettazione (una tantum)">
-              <Input
-                type="number"
-                step="0.1"
-                value={designHours}
-                onChange={(e) => setDesignHours(parseFloat(e.target.value) || 0)}
-              />
-            </Field>
-          </div>
-          {productionCostFromHours != null && (
+        <Section
+          title="Tempo"
+          summary={productionHours > 0 ? `${fmtDuration(productionHours)} a pezzo` : 'nessuno'}
+          open={openSec.time}
+          onToggle={(v) => setOpenSec((sec) => ({ ...sec, time: v }))}
+        >
+          <DurationInput label="Produzione, per ogni pezzo" hours={productionHours} onChange={setProductionHours} />
+          <DurationInput label="Progettazione, una volta sola" hours={designHours} onChange={setDesignHours} />
+          {laborFromTime != null ? (
             <p className="text-sm text-lc-muted">
-              Costo manodopera per pezzo: <strong>{formatEUR(productionCostFromHours)}</strong>{' '}
-              <button
-                type="button"
-                onClick={() => setLaborCost(Math.round(productionCostFromHours * 100) / 100)}
-                className="font-semibold text-lc-olive underline"
-              >
-                usa questo costo
-              </button>
+              Manodopera per pezzo: <strong className="text-lc-text">{formatEUR(laborFromTime)}</strong> ({rates.productionRate} €/h dalle Impostazioni). Si calcola da sola dal tempo.
             </p>
+          ) : (
+            <Field label="Costo manodopera fisso per pezzo (€), se non indichi il tempo">
+              <Input
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                value={laborCost}
+                onChange={(e) => setLaborCost(parseFloat(e.target.value) || 0)}
+              />
+            </Field>
           )}
           {designCostOneTime != null && (
             <p className="text-sm text-lc-muted">
-              Costo progettazione template (una tantum, non per pezzo):{' '}
-              <strong>{formatEUR(designCostOneTime)}</strong> — da riguadagnare sulle prime vendite,
-              non incide sul margine per pezzo qui sotto.
+              Progettazione del template: <strong className="text-lc-text">{formatEUR(designCostOneTime)}</strong> una tantum, da riguadagnare sulle prime vendite. Non incide sul margine per pezzo.
             </p>
           )}
-        </Card>
+        </Section>
 
+        <Section
+          title="Materiali"
+          summary={bom.length > 0 ? pluralMat : 'nessuno'}
+          open={openSec.mat}
+          onToggle={(v) => setOpenSec((sec) => ({ ...sec, mat: v }))}
+        >
         <div>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm text-lc-muted">Distinta base (materiali)</span>
@@ -562,34 +581,46 @@ function ProductForm({
             })}
           </div>
         </div>
+        </Section>
 
-        <Card className="flex flex-col gap-1 bg-lc-bg">
+        <Section
+          title="Descrizione"
+          summary={description ? 'compilata' : 'vuota'}
+          open={openSec.extra}
+          onToggle={(v) => setOpenSec((sec) => ({ ...sec, extra: v }))}
+        >
+          <Field label="Descrizione">
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          </Field>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            Prodotto attivo
+          </label>
+        </Section>
+
+        {/* Riepilogo sempre visibile mentre compili: vendita, costo e margine su tre righe */}
+        <div className="sticky bottom-0 z-10 flex flex-col gap-0.5 rounded-card border-2 border-lc-border bg-lc-surface px-3 py-2.5 shadow-soft">
           <div className="flex justify-between text-sm">
-            <span className="text-lc-muted">Costo materiali</span>
-            <span>{formatEUR(materialCost)}</span>
+            <span className="text-lc-muted">Vendita</span>
+            <span className="font-semibold">{formatEUR(salePrice)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-lc-muted">Costo totale (materiali + manodopera)</span>
-            <span>{formatEUR(totalCost)}</span>
+            <span className="text-lc-muted">Costo (materiali {formatEUR(materialCost)} + lavoro {formatEUR(effectiveLabor)})</span>
+            <span className="font-semibold">{formatEUR(totalCost)}</span>
           </div>
-          <div className="flex justify-between font-medium">
+          <div className="flex justify-between font-display font-semibold">
             <span>Margine</span>
             <span className={margin >= 0 ? 'text-lc-success' : 'text-lc-danger'}>
               {formatEUR(margin)} ({marginPct.toFixed(0)}%)
             </span>
           </div>
-        </Card>
+        </div>
 
-        <Field label="Descrizione">
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-        </Field>
+        {submitted && Object.keys(errors).length > 0 && (
+          <p className="text-sm font-semibold text-lc-danger">Mancano alcuni campi obbligatori: li trovi segnati in rosso.</p>
+        )}
 
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-          Prodotto attivo
-        </label>
-
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-1 flex items-center justify-between">
           {onDelete ? <DangerButton type="button" onClick={onDelete}>Elimina</DangerButton> : <span />}
           <div className="flex gap-2">
             {onDuplicate && (

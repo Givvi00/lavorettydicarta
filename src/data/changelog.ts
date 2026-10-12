@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '1.5',
+    date: '2026-10-12',
+    items: [
+      'Form di materiali e prodotti rifatte a blocchi che si aprono e si chiudono, con un riassunto di ogni blocco.',
+      'Confezione più chiara: scegli "Pezzo singolo" o "Confezione" e vedi subito quanto costa un pezzo.',
+      'I tempi di lavoro si scrivono in ore e minuti, con le scorciatoie 15 min, 30 min, 1 h, 2 h. La manodopera si calcola da sola.',
+      'Nel prodotto, vendita, costo e margine sono sempre visibili in basso mentre compili, e nell'elenco stanno su tre righe.',
+      'Prima di salvare un materiale o un prodotto l'app controlla i campi obbligatori (nome e prezzo) e segna in rosso quelli mancanti.',
+    ],
+  },
+  {
     version: '1.4',
     date: '2026-10-12',
     items: [

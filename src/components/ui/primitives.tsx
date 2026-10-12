@@ -83,12 +83,83 @@ export function DangerButton({
   );
 }
 
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({ label, children, error }: { label: string; children: ReactNode; error?: string }) {
   return (
     <label className="flex flex-col gap-1 text-left">
       <span className="text-sm font-semibold text-lc-muted">{label}</span>
       {children}
+      {error && <span className="text-xs font-semibold text-lc-danger">{error}</span>}
     </label>
+  );
+}
+
+/** Blocco della form che si apre e si chiude, con un riassunto a destra. Il contenuto resta nel DOM anche da chiuso. */
+export function Section({
+  title,
+  summary,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  summary?: ReactNode;
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  children: ReactNode;
+}) {
+  return (
+    <details
+      open={open}
+      onToggle={(e) => onToggle((e.currentTarget as HTMLDetailsElement).open)}
+      className="group rounded-card border-2 border-lc-border bg-lc-surface p-3"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2 font-display font-semibold [&::-webkit-details-marker]:hidden">
+        <span>{title}</span>
+        <span className="min-w-0 flex-1 truncate text-right font-sans text-xs font-semibold text-lc-muted">{summary}</span>
+        <span className="text-xl leading-none text-lc-muted transition-transform group-open:rotate-45">+</span>
+      </summary>
+      <div className="mt-3 flex flex-col gap-3">{children}</div>
+    </details>
+  );
+}
+
+/** Durata in ore e minuti. Il valore resta in ore decimali (0,5 = 30 min), come nel database. */
+export function DurationInput({
+  label,
+  hours,
+  onChange,
+}: {
+  label: string;
+  hours: number;
+  onChange: (hours: number) => void;
+}) {
+  const total = Math.round(hours * 60);
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  const setMinutes = (min: number) => onChange(Math.round((Math.max(0, min) / 60) * 10000) / 10000);
+  const chips: [string, number][] = [['15 min', 15], ['30 min', 30], ['1 h', 60], ['2 h', 120]];
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-sm font-semibold text-lc-muted">{label}</span>
+      <div className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-1.5">
+        <Input className="min-w-0" type="number" min="0" inputMode="numeric" aria-label="Ore" value={h} onChange={(e) => setMinutes((parseInt(e.target.value, 10) || 0) * 60 + m)} />
+        <span className="text-sm font-semibold text-lc-muted">h</span>
+        <Input className="min-w-0" type="number" min="0" inputMode="numeric" aria-label="Minuti" value={m} onChange={(e) => setMinutes(h * 60 + (parseInt(e.target.value, 10) || 0))} />
+        <span className="text-sm font-semibold text-lc-muted">min</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {chips.map(([text, min]) => (
+          <button
+            key={text}
+            type="button"
+            onClick={() => setMinutes(min)}
+            className={`rounded-full border-2 px-2.5 py-0.5 text-xs font-bold transition-colors ${total === min ? 'border-lc-accent bg-lc-accent text-lc-accent-text' : 'border-lc-border text-lc-muted'}`}
+          >
+            {text}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -131,8 +131,9 @@ export const useStore = create<LcState>((set, get) => ({
       stockQty: input.stockQty ?? existing?.stockQty ?? 0,
       minStock: input.minStock ?? existing?.minStock,
       notes: input.notes ?? existing?.notes,
-      packageQty: input.packageQty ?? existing?.packageQty,
-      packagePrice: input.packagePrice ?? existing?.packagePrice,
+      // se la chiave è presente (anche undefined) vale il nuovo valore: così si può passare a "pezzo singolo"
+      packageQty: 'packageQty' in input ? input.packageQty : existing?.packageQty,
+      packagePrice: 'packagePrice' in input ? input.packagePrice : existing?.packagePrice,
       photo: input.photo ?? existing?.photo,
       purchaseUrl: input.purchaseUrl ?? existing?.purchaseUrl,
       createdAt: existing?.createdAt ?? now,

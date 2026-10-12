@@ -10,6 +10,7 @@ import {
   Input,
   Textarea,
   Select,
+  Section,
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
@@ -405,70 +406,84 @@ export function MaterialForm({
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [packageQty, setPackageQty] = useState(initial?.packageQty ?? 0);
   const [packagePrice, setPackagePrice] = useState(initial?.packagePrice ?? 0);
+  const [buyMode, setBuyMode] = useState<'single' | 'pack'>(initial?.packageQty && initial?.packagePrice ? 'pack' : 'single');
   const [purchaseUrl, setPurchaseUrl] = useState(initial?.purchaseUrl ?? '');
   const [photo, setPhoto] = useState(initial?.photo ?? '');
+  const [openSec, setOpenSec] = useState({ id: true, price: true, stock: false, extra: false });
+  const [submitted, setSubmitted] = useState(false);
 
   const costPerUnitFromPackage =
-    packageQty > 0 && packagePrice > 0 ? Math.round((packagePrice / packageQty) * 10000) / 10000 : null;
+    buyMode === 'pack' && packageQty > 0 && packagePrice > 0 ? Math.round((packagePrice / packageQty) * 10000) / 10000 : null;
+  const finalCost = buyMode === 'pack' ? costPerUnitFromPackage ?? 0 : unitCost;
+
+  // Campi obbligatori: nome e prezzo (di un pezzo, oppure pezzi e prezzo della confezione)
+  const errors: Record<string, string> = {};
+  if (!name.trim()) errors.name = 'Scrivi il nome del materiale';
+  if (buyMode === 'single' && !(unitCost > 0)) errors.unitCost = 'Inserisci il costo di un pezzo';
+  if (buyMode === 'pack' && !(packageQty > 0)) errors.packageQty = 'Quanti pezzi ci sono nella confezione?';
+  if (buyMode === 'pack' && !(packagePrice > 0)) errors.packagePrice = 'Inserisci il prezzo della confezione';
+  const shown = submitted ? errors : {};
+
+  function trySave(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitted(true);
+    const keys = Object.keys(errors);
+    if (keys.length > 0) {
+      setOpenSec((s) => ({ ...s, id: s.id || !!errors.name, price: s.price || keys.some((k) => k !== 'name') }));
+      setTimeout(() => document.getElementById(`mat-${keys[0]}`)?.focus(), 50);
+      return;
+    }
+    onSave({
+      name: name.trim(),
+      unit,
+      unitCost: finalCost,
+      supplier: supplier.trim(),
+      category: category.trim(),
+      stockQty,
+      minStock,
+      notes,
+      packageQty: buyMode === 'pack' ? packageQty : undefined,
+      packagePrice: buyMode === 'pack' ? packagePrice : undefined,
+      purchaseUrl,
+      photo,
+    });
+  }
+
+  const err = (k: string) => (shown[k] ? '!border-lc-danger' : '');
 
   return (
     <Modal open={open} onClose={onClose} title={initial?.id ? 'Modifica materiale' : 'Nuovo materiale'}>
-      <form
-        className="flex flex-col gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!name.trim()) return;
-          onSave({
-            name: name.trim(),
-            unit,
-            unitCost: costPerUnitFromPackage ?? unitCost,
-            supplier: supplier.trim(),
-            category: category.trim(),
-            stockQty,
-            minStock,
-            notes,
-            packageQty: packageQty || undefined,
-            packagePrice: packagePrice || undefined,
-            purchaseUrl,
-            photo,
-          });
-        }}
-      >
+      <form className="flex flex-col gap-3" onSubmit={trySave} noValidate>
         <PhotoPicker value={photo} onChange={setPhoto} />
 
-        <Field label="Nome">
+        <Section
+          title="Cos'è"
+          summary={[name.trim() || 'Senza nome', category.trim()].filter(Boolean).join(' · ')}
+          open={openSec.id}
+          onToggle={(v) => setOpenSec((s) => ({ ...s, id: v }))}
+        >
           {/* niente autoFocus: da telefono la tastiera non deve aprirsi da sola */}
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </Field>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label="Categoria">
-            <Input
-              list="mat-categories"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="Carta, Colle, Nastri..."
-            />
-            <datalist id="mat-categories">
-              {distinctValues(allMaterials, 'category').map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
+          <Field label="Nome *" error={shown.name}>
+            <Input id="mat-name" className={err('name')} value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
-          <Field label="Fornitore">
-            <Input
-              list="mat-suppliers"
-              value={supplier}
-              onChange={(e) => setSupplier(e.target.value)}
-              placeholder="Amazon, Action..."
-            />
-            <datalist id="mat-suppliers">
-              {distinctValues(allMaterials, 'supplier').map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Categoria">
+              <Input list="mat-categories" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Carta, Colle, Nastri..." />
+              <datalist id="mat-categories">
+                {distinctValues(allMaterials, 'category').map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </Field>
+            <Field label="Fornitore">
+              <Input list="mat-suppliers" value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Amazon, Action..." />
+              <datalist id="mat-suppliers">
+                {distinctValues(allMaterials, 'supplier').map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+            </Field>
+          </div>
           <Field label="Unità di misura">
             <Select value={unit} onChange={(e) => setUnit(e.target.value)}>
               {/* se un materiale ha un'unità fuori elenco la mostriamo comunque, finché non la cambi */}
@@ -479,77 +494,92 @@ export function MaterialForm({
               ))}
             </Select>
           </Field>
-          <Field label={costPerUnitFromPackage != null ? 'Costo per unità (€) — dalla confezione' : 'Costo per unità (€)'}>
-            <Input
-              type="number"
-              step="0.01"
-              value={costPerUnitFromPackage ?? unitCost}
-              disabled={costPerUnitFromPackage != null}
-              onChange={(e) => setUnitCost(parseFloat(e.target.value) || 0)}
-            />
-          </Field>
-        </div>
+        </Section>
 
-        <Card className="flex flex-col gap-2 bg-lc-bg">
-          <p className="flex items-center gap-1.5 text-sm font-semibold text-lc-muted">
-            <Package2 size={15} /> Confezione d'acquisto (opzionale)
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={`${unit || 'Pezzi'} per confezione`}>
-              <Input
-                type="number"
-                step="1"
-                value={packageQty}
-                onChange={(e) => setPackageQty(parseFloat(e.target.value) || 0)}
-              />
+        <Section
+          title="Prezzo"
+          summary={finalCost > 0 ? `${formatEUR(finalCost)}/${unit}` : 'da inserire'}
+          open={openSec.price}
+          onToggle={(v) => setOpenSec((s) => ({ ...s, price: v }))}
+        >
+          <div className="grid grid-cols-2 gap-1 rounded-btn border-2 border-lc-border bg-lc-accent/10 p-1" role="radiogroup" aria-label="Come lo compri">
+            {(['single', 'pack'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="radio"
+                aria-checked={buyMode === mode}
+                onClick={() => setBuyMode(mode)}
+                className={`flex items-center justify-center gap-1.5 rounded-[0.8rem] px-2 py-2 font-display text-sm font-semibold transition-colors ${buyMode === mode ? 'bg-lc-accent text-lc-accent-text' : 'text-lc-muted'}`}
+              >
+                {mode === 'pack' && <Package2 size={15} />}
+                {mode === 'single' ? 'Pezzo singolo' : 'Confezione'}
+              </button>
+            ))}
+          </div>
+          {buyMode === 'single' ? (
+            <Field label="Costo di un pezzo (€)" error={shown.unitCost}>
+              <Input id="mat-unitCost" className={err('unitCost')} type="number" step="0.01" inputMode="decimal" value={unitCost} onChange={(e) => setUnitCost(parseFloat(e.target.value) || 0)} />
             </Field>
-            <Field label="Prezzo confezione (€)">
-              <Input
-                type="number"
-                step="0.01"
-                value={packagePrice}
-                onChange={(e) => setPackagePrice(parseFloat(e.target.value) || 0)}
-              />
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label={`${unit || 'Pezzi'} nella confezione *`} error={shown.packageQty}>
+                  <Input id="mat-packageQty" className={err('packageQty')} type="number" step="1" inputMode="numeric" value={packageQty} onChange={(e) => setPackageQty(parseFloat(e.target.value) || 0)} />
+                </Field>
+                <Field label="Prezzo confezione (€) *" error={shown.packagePrice}>
+                  <Input id="mat-packagePrice" className={err('packagePrice')} type="number" step="0.01" inputMode="decimal" value={packagePrice} onChange={(e) => setPackagePrice(parseFloat(e.target.value) || 0)} />
+                </Field>
+              </div>
+              <p className="rounded-btn bg-lc-accent/10 px-3 py-2 text-sm font-semibold">
+                {costPerUnitFromPackage != null ? (
+                  <>
+                    Un pezzo costa <span className="text-lc-success">{formatEUR(costPerUnitFromPackage)}</span>. È il costo che usa la distinta base.
+                  </>
+                ) : (
+                  'Inserisci pezzi e prezzo per vedere quanto costa un pezzo.'
+                )}
+              </p>
+            </>
+          )}
+        </Section>
+
+        <Section
+          title="Magazzino"
+          summary={`${stockQty} ${unit}`}
+          open={openSec.stock}
+          onToggle={(v) => setOpenSec((s) => ({ ...s, stock: v }))}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="In magazzino">
+              <Input type="number" step="0.01" inputMode="decimal" value={stockQty} onChange={(e) => setStockQty(parseFloat(e.target.value) || 0)} />
+            </Field>
+            <Field label="Avvisami sotto">
+              <Input type="number" step="0.01" inputMode="decimal" value={minStock} onChange={(e) => setMinStock(parseFloat(e.target.value) || 0)} />
             </Field>
           </div>
-          {costPerUnitFromPackage != null && (
-            <p className="text-sm text-lc-muted">
-              Costo per {unit || 'unità'}: <strong>{formatEUR(costPerUnitFromPackage)}</strong> — è quello usato nella
-              distinta base dei prodotti (non il prezzo dell'intera confezione).
-            </p>
-          )}
-        </Card>
+          <p className="text-xs font-semibold text-lc-muted">La giacenza si conta in pezzi singoli ({unit}), anche se compri a confezioni.</p>
+        </Section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Quantità in magazzino">
-            <Input
-              type="number"
-              step="0.01"
-              value={stockQty}
-              onChange={(e) => setStockQty(parseFloat(e.target.value) || 0)}
-            />
+        <Section
+          title="Link e note"
+          summary={purchaseUrl || notes ? 'compilato' : 'vuoto'}
+          open={openSec.extra}
+          onToggle={(v) => setOpenSec((s) => ({ ...s, extra: v }))}
+        >
+          <Field label="Link acquisto (es. Amazon, Cricut store...)">
+            <Input type="url" value={purchaseUrl} onChange={(e) => setPurchaseUrl(e.target.value)} placeholder="https://..." />
           </Field>
-          <Field label="Scorta minima (avviso)">
-            <Input
-              type="number"
-              step="0.01"
-              value={minStock}
-              onChange={(e) => setMinStock(parseFloat(e.target.value) || 0)}
-            />
+          <Field label="Note">
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </Field>
-        </div>
-        <Field label="Link acquisto (es. Amazon, Cricut store...)">
-          <Input
-            type="url"
-            value={purchaseUrl}
-            onChange={(e) => setPurchaseUrl(e.target.value)}
-            placeholder="https://..."
-          />
-        </Field>
-        <Field label="Note">
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
-        </Field>
-        <div className="mt-2 flex items-center justify-between">
+        </Section>
+
+        {submitted && Object.keys(errors).length > 0 && (
+          <p className="text-sm font-semibold text-lc-danger">Mancano alcuni campi obbligatori: li trovi segnati in rosso.</p>
+        )}
+
+        <div className="mt-1 flex items-center justify-between">
           {onDelete ? <DangerButton type="button" onClick={onDelete}>Elimina</DangerButton> : <span />}
           <div className="flex gap-2">
             {onDuplicate && (
