@@ -113,11 +113,15 @@ export function Prodotti() {
                   {!p.active && <Badge tone="danger">disattivato</Badge>}
                 </div>
                 <div className="mt-1 flex flex-col text-sm text-lc-muted">
-                  <span>Vendita {formatEUR(p.salePrice)}</span>
-                  <span>Costo {formatEUR(cost)}</span>
+                  <span>
+                    Vendita <span className="font-semibold text-lc-olive">{formatEUR(p.salePrice)}</span>
+                  </span>
+                  <span>
+                    Costo <span className="font-semibold text-lc-danger">{formatEUR(cost)}</span>
+                  </span>
                   <span>
                     Margine{' '}
-                    <span className={margin >= 0 ? 'text-lc-success' : 'text-lc-danger'}>{formatEUR(margin)}</span>
+                    <span className={`font-semibold ${margin >= 0 ? 'text-lc-success' : 'text-lc-danger'}`}>{formatEUR(margin)}</span>
                   </span>
                 </div>
                 </div>
@@ -602,14 +606,14 @@ function ProductForm({
         <div className="sticky bottom-0 z-10 flex flex-col gap-0.5 rounded-card border-2 border-lc-border bg-lc-surface px-3 py-2.5 shadow-soft">
           <div className="flex justify-between text-sm">
             <span className="text-lc-muted">Vendita</span>
-            <span className="font-semibold">{formatEUR(salePrice)}</span>
+            <span className="font-semibold text-lc-olive">{formatEUR(salePrice)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-lc-muted">Costo (materiali {formatEUR(materialCost)} + lavoro {formatEUR(effectiveLabor)})</span>
-            <span className="font-semibold">{formatEUR(totalCost)}</span>
+            <span className="font-semibold text-lc-danger">{formatEUR(totalCost)}</span>
           </div>
           <div className="flex justify-between font-display font-semibold">
-            <span>Margine</span>
+            <span className="text-lc-muted">Margine</span>
             <span className={margin >= 0 ? 'text-lc-success' : 'text-lc-danger'}>
               {formatEUR(margin)} ({marginPct.toFixed(0)}%)
             </span>
