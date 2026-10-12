@@ -106,7 +106,7 @@ export function Prodotti() {
                 <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="font-semibold">{p.name}</p>
-                  {p.category && <Badge tone="pink">{p.category}</Badge>}
+                  {p.category && <Badge>{p.category}</Badge>}
                   <Badge tone={p.type === 'pronto' ? 'default' : 'accent'}>
                     {p.type === 'pronto' ? 'pronto' : 'personalizzabile'}
                   </Badge>
