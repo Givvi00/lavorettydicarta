@@ -11,6 +11,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '1.8',
+    date: '2026-10-17',
+    items: [
+      "Nei Materiali c'è la nuova vista \"Magazzino\": il valore in euro di tutto ciò che hai, quanto pesa ogni categoria e una griglia con giacenze e costi che si cambiano sul posto.",
+      "Se cambi il costo di un materiale venduto a confezioni, l'app aggiorna da sola il prezzo della confezione.",
+    ],
+  },
+  {
     version: '1.7',
     date: '2026-10-17',
     items: [

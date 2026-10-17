@@ -14,10 +14,11 @@ import {
   Badge,
   EmptyState,
 } from '@/components/ui/primitives';
-import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart, Tags, PackageMinus } from 'lucide-react';
+import { Boxes, ExternalLink, Package2, Receipt, ShoppingCart, Tags, PackageMinus, LayoutGrid, Table2 } from 'lucide-react';
 import { PageBar } from '@/components/ui/PageBar';
 import { PhotoPicker, Lightbox } from '@/components/ui/PhotoPicker';
 import { ScanReceiptModal } from '@/components/ScanReceiptModal';
+import { StockGrid } from '@/components/StockGrid';
 import { formatEUR, aggregateMaterialShortfalls, effectiveUnitCost } from '@/utils/calc';
 import { UNITS } from '@/data/units';
 import type { Material } from '@/types';
@@ -43,6 +44,22 @@ export function Materiali() {
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState('');
   const [supFilter, setSupFilter] = useState('');
+  // vista scelta: schede oppure griglia di magazzino (si ricorda su questo dispositivo)
+  const [view, setViewState] = useState<'cards' | 'grid'>(() => {
+    try {
+      return localStorage.getItem('lc-materials-view') === 'grid' ? 'grid' : 'cards';
+    } catch {
+      return 'cards';
+    }
+  });
+  function setView(v: 'cards' | 'grid') {
+    setViewState(v);
+    try {
+      localStorage.setItem('lc-materials-view', v);
+    } catch {
+      /* ignora */
+    }
+  }
 
   const categories = distinctValues(materials, 'category');
   const suppliers = distinctValues(materials, 'supplier');
@@ -109,6 +126,19 @@ export function Materiali() {
                 </Select>
               </>
             )}
+            <div className="grid shrink-0 grid-cols-2 gap-0.5 rounded-btn border-2 border-lc-border bg-lc-accent/10 p-0.5" role="group" aria-label="Vista">
+              {([['cards', 'Schede', LayoutGrid], ['grid', 'Magazzino', Table2]] as const).map(([id, label, Icon]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={view === id}
+                  onClick={() => setView(id)}
+                  className={`flex items-center justify-center gap-1.5 rounded-[0.6rem] px-2.5 py-1 font-display text-sm font-semibold transition-colors ${view === id ? 'bg-lc-accent text-lc-accent-text' : 'text-lc-muted'}`}
+                >
+                  <Icon size={14} /> {label}
+                </button>
+              ))}
+            </div>
           </>
         }
       />
@@ -131,7 +161,9 @@ export function Materiali() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {view === 'grid' && <StockGrid materials={filtered} />}
+
+      <div className={view === 'grid' ? 'hidden' : 'grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3'}>
         {filtered.length === 0 && (
           <EmptyState icon={<Boxes />} text="Il magazzino è vuoto: aggiungi il primo materiale." />
         )}
