@@ -107,19 +107,22 @@ export function Section({
   onToggle: (open: boolean) => void;
   children: ReactNode;
 }) {
+  // Un semplice pulsante (non <details>): su iPhone i blocchi nativi si aprono in modo imprevedibile.
+  // Il contenuto resta nel DOM anche da chiuso, così i campi non si perdono.
   return (
-    <details
-      open={open}
-      onToggle={(e) => onToggle((e.currentTarget as HTMLDetailsElement).open)}
-      className="group rounded-card border-2 border-lc-border bg-lc-surface p-3"
-    >
-      <summary className="flex cursor-pointer list-none items-center gap-2 font-display font-semibold [&::-webkit-details-marker]:hidden">
+    <div className="rounded-card border-2 border-lc-border bg-lc-surface p-3">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => onToggle(!open)}
+        className="flex w-full items-center gap-2 text-left font-display font-semibold"
+      >
         <span>{title}</span>
         <span className="min-w-0 flex-1 truncate text-right font-sans text-xs font-semibold text-lc-muted">{summary}</span>
-        <span className="text-xl leading-none text-lc-muted transition-transform group-open:rotate-45">+</span>
-      </summary>
-      <div className="mt-3 flex flex-col gap-3">{children}</div>
-    </details>
+        <span className={`text-xl leading-none text-lc-muted transition-transform ${open ? 'rotate-45' : ''}`}>+</span>
+      </button>
+      <div className={open ? 'mt-3 flex flex-col gap-3' : 'hidden'}>{children}</div>
+    </div>
   );
 }
 

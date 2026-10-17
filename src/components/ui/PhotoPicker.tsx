@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ImagePlus, X } from 'lucide-react';
 import { fileToCompressedDataUrl } from '@/utils/image';
-import { Field } from '@/components/ui/primitives';
 
 /** Foto a schermo intero: si chiude toccando ovunque o con la X */
 export function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
@@ -53,7 +52,9 @@ export function PhotoPicker({
   }
 
   return (
-    <Field label={label}>
+    // Non un <label>: un'etichetta che copre tutta la riga fa partire la fotocamera con un tocco qualsiasi
+    <div className="flex flex-col gap-1 text-left">
+      <span className="text-sm font-semibold text-lc-muted">{label}</span>
       <div className="flex items-center gap-3">
         {value ? (
           <div className="relative">
@@ -115,6 +116,6 @@ export function PhotoPicker({
         )}
       </div>
       {zoom && value && <Lightbox src={value} onClose={() => setZoom(false)} />}
-    </Field>
+    </div>
   );
 }
