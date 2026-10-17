@@ -134,7 +134,8 @@ export function CustomerForm({
         }}
       >
         <Field label="Nome">
-          <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+          {/* niente autoFocus: da telefono la tastiera non deve aprirsi da sola */}
+          <Input value={name} onChange={(e) => setName(e.target.value)} required />
         </Field>
         <Field label="Telefono">
           <div className="flex gap-2">
