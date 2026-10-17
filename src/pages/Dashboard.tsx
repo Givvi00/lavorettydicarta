@@ -13,6 +13,7 @@ import {
 import { useStore } from '@/store/useStore';
 import { Card, Badge, EmptyState, type TapeColor } from '@/components/ui/primitives';
 import { MonthOrdersChart } from '@/components/MonthOrdersChart';
+import { BUILD_ID } from '@/utils/build';
 import { formatEUR, orderTotal, aggregateMaterialShortfalls, countsAsRevenue } from '@/utils/calc';
 
 const GIRL_NAME = 'Paola';
@@ -187,6 +188,8 @@ export function Dashboard() {
 
       <p className="text-center text-xs text-lc-muted">
         {products.length} prodott{products.length === 1 ? 'o' : 'i'} in catalogo · fatto con 🧡 per te
+        <br />
+        <span className="font-mono">deploy {BUILD_ID}</span>
       </p>
     </div>
   );

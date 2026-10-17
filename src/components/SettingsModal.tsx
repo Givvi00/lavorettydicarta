@@ -3,6 +3,7 @@ import { Modal, Field, Input, PrimaryButton, SecondaryButton } from '@/component
 import { useSettings } from '@/hooks/useSettings';
 import { ChangelogSheet } from '@/components/WhatsNew';
 import { APP_VERSION, CHANGELOG } from '@/data/changelog';
+import { BUILD_ID, BUILD_DATE } from '@/utils/build';
 
 export function SettingsModal({
   open,
@@ -57,6 +58,10 @@ export function SettingsModal({
         {changelogOpen && (
           <ChangelogSheet entries={CHANGELOG} title="Tutte le novità" onClose={() => setChangelogOpen(false)} />
         )}
+
+        <p className="mt-1 select-all text-center text-xs font-semibold text-lc-muted">
+          Versione {APP_VERSION} · deploy <span className="font-mono">{BUILD_ID}</span> · {BUILD_DATE}
+        </p>
 
         <div className="mt-2 flex items-center justify-end">
           <PrimaryButton type="submit">Salva</PrimaryButton>
