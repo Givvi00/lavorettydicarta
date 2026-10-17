@@ -208,8 +208,12 @@ export function StockGrid({ materials, onOpen }: { materials: Material[]; onOpen
       {/* intestazioni di colonna, solo da schermo largo */}
       <div className="hidden grid-cols-[minmax(0,1fr)_7rem_7rem_6.5rem] gap-x-2 px-3 text-xs font-semibold uppercase tracking-wide text-lc-muted md:grid">
         <span>Materiale</span>
-        <span className="text-right">Giacenza</span>
-        <span className="text-right">Costo €/unità</span>
+        {/* stesso schema delle righe: il campo, poi lo spazio dell'unità di misura; pr = margine interno del campo */}
+        <span className="flex items-center gap-1.5">
+          <span className="min-w-0 flex-1 pr-[10px] text-right">Giacenza</span>
+          <span className="w-12 shrink-0" />
+        </span>
+        <span className="pr-[10px] text-right">Costo €/unità</span>
         <span className="text-right">Valore</span>
       </div>
 
