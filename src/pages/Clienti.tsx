@@ -222,7 +222,7 @@ export function CustomerForm({
           </div>
           <SecondaryButton type="button" onClick={makeLabel} disabled={!canLabel || makingLabel}>
             {makingLabel ? <Loader2 size={16} className="mr-1 inline -mt-0.5 animate-spin" /> : <FileText size={16} className="mr-1 inline -mt-0.5" />}
-            Etichetta di spedizione A6 (PDF)
+            Etichetta di spedizione A5 (PDF)
           </SecondaryButton>
           {!canLabel && <p className="text-xs font-semibold text-lc-muted">Per l'etichetta servono nome, via, CAP e città.</p>}
           {labelError && <p className="text-xs font-semibold text-lc-danger">{labelError}</p>}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Boxes, Check } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Badge, Card, Input, Select } from '@/components/ui/primitives';
 import { effectiveUnitCost, formatEUR } from '@/utils/calc';
@@ -12,7 +12,7 @@ const valueOf = (m: Material) => m.stockQty * effectiveUnitCost(m);
 const isLow = (m: Material) => m.minStock != null && m.minStock > 0 && m.stockQty <= m.minStock;
 
 /** Una riga della griglia: giacenza e costo si modificano sul posto e si salvano quando esci dal campo */
-function StockRow({ m, share }: { m: Material; share: number }) {
+function StockRow({ m, share, onOpen }: { m: Material; share: number; onOpen: (m: Material) => void }) {
   const upsertMaterial = useStore((s) => s.upsertMaterial);
   const unitCost = round(effectiveUnitCost(m), 4);
   const [qty, setQty] = useState(m.stockQty);
@@ -54,11 +54,11 @@ function StockRow({ m, share }: { m: Material; share: number }) {
   const onEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') e.currentTarget.blur();
   };
-  const cell = 'w-full min-w-0 text-right !py-1.5 !px-2 text-sm tabular-nums';
+  const cell = 'w-full min-w-0 text-right !py-1 !px-2 text-sm tabular-nums';
 
   return (
     <div
-      className={`relative grid grid-cols-3 items-center gap-x-2 gap-y-1.5 overflow-hidden rounded-btn border-2 px-3 py-2 md:grid-cols-[minmax(0,1fr)_7rem_7rem_6.5rem] ${
+      className={`relative grid grid-cols-3 items-center gap-x-2 gap-y-1 overflow-hidden rounded-btn border-2 px-2.5 py-1.5 md:grid-cols-[minmax(0,1fr)_7rem_7rem_6.5rem] ${
         low ? 'border-lc-danger/40 bg-lc-danger/5' : 'border-lc-border bg-lc-surface'
       }`}
     >
@@ -68,17 +68,31 @@ function StockRow({ m, share }: { m: Material; share: number }) {
         className="pointer-events-none absolute inset-y-0 left-0 bg-lc-accent/15"
         style={{ width: `${Math.max(share * 100, value > 0 ? 2 : 0)}%` }}
       />
-      <div className="relative col-span-3 min-w-0 md:col-span-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="break-words text-sm font-semibold leading-snug">{m.name}</span>
-          {m.category && <Badge>{m.category}</Badge>}
-          {low && <Badge tone="danger">scorta bassa</Badge>}
-          {saved && <Check size={15} className="text-lc-success" aria-label="Salvato" />}
+      <div className="relative col-span-3 flex min-w-0 items-center gap-2 md:col-span-1">
+        {m.photo ? (
+          <img src={m.photo} alt="" className="h-7 w-7 shrink-0 rounded-md object-cover" />
+        ) : (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-lc-accent/20 text-lc-olive">
+            <Boxes size={13} />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => onOpen(m)}
+            className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-left"
+            aria-label={`Apri la scheda di ${m.name}`}
+          >
+            <span className="break-words text-sm font-semibold leading-tight hover:underline">{m.name}</span>
+            {m.category && <Badge>{m.category}</Badge>}
+            {low && <Badge tone="danger">scorta bassa</Badge>}
+            {saved && <Check size={15} className="text-lc-success" aria-label="Salvato" />}
+          </button>
+          {error && <p className="text-xs font-semibold text-lc-danger">{error}</p>}
         </div>
-        {error && <p className="text-xs font-semibold text-lc-danger">{error}</p>}
       </div>
       <label className="relative flex min-w-0 flex-col gap-0.5">
-        <span className="text-[11px] font-semibold text-lc-muted md:hidden">Giacenza ({m.unit})</span>
+        <span className="text-[10px] font-semibold leading-none text-lc-muted md:hidden">Giacenza ({m.unit})</span>
         <div className="flex items-center gap-1.5">
           <Input
             className={cell}
@@ -95,7 +109,7 @@ function StockRow({ m, share }: { m: Material; share: number }) {
         </div>
       </label>
       <label className="relative flex min-w-0 flex-col gap-0.5">
-        <span className="text-[11px] font-semibold text-lc-muted md:hidden">Costo (€/{m.unit})</span>
+        <span className="text-[10px] font-semibold leading-none text-lc-muted md:hidden">Costo (€/{m.unit})</span>
         <Input
           className={cell}
           type="number"
@@ -109,7 +123,7 @@ function StockRow({ m, share }: { m: Material; share: number }) {
         />
       </label>
       <div className="relative flex min-w-0 flex-col gap-0.5 text-right">
-        <span className="text-[11px] font-semibold text-lc-muted md:hidden">Valore</span>
+        <span className="text-[10px] font-semibold leading-none text-lc-muted md:hidden">Valore</span>
         <span className="font-display text-sm font-semibold tabular-nums">{formatEUR(value)}</span>
       </div>
     </div>
@@ -117,7 +131,7 @@ function StockRow({ m, share }: { m: Material; share: number }) {
 }
 
 /** Magazzino in griglia: valore totale in euro, dove sono i soldi fermi e giacenze/costi modificabili al volo */
-export function StockGrid({ materials }: { materials: Material[] }) {
+export function StockGrid({ materials, onOpen }: { materials: Material[]; onOpen: (m: Material) => void }) {
   const [sort, setSort] = useState<SortKey>('value');
 
   const sorted = useMemo(() => {
@@ -199,9 +213,9 @@ export function StockGrid({ materials }: { materials: Material[] }) {
         <span className="text-right">Valore</span>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         {sorted.map((m) => (
-          <StockRow key={m.id} m={m} share={maxValue > 0 ? valueOf(m) / maxValue : 0} />
+          <StockRow key={m.id} m={m} share={maxValue > 0 ? valueOf(m) / maxValue : 0} onOpen={onOpen} />
         ))}
         {sorted.length === 0 && <p className="text-sm text-lc-muted">Nessun materiale con questi filtri.</p>}
       </div>

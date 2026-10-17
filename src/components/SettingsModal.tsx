@@ -53,7 +53,7 @@ export function SettingsModal({
         </Field>
 
         <p className="mt-2 text-sm font-semibold text-lc-muted">Mittente sulle etichette di spedizione</p>
-        <p className="text-sm text-lc-muted">Compare in alto sull'etichetta A6. Se lo cambi, resta su questo dispositivo.</p>
+        <p className="text-sm text-lc-muted">Compare in alto sull'etichetta A5. Se lo cambi, resta su questo dispositivo.</p>
         <Field label="Nome o attività">
           <Input value={senderDraft.name} onChange={(e) => setSenderDraft({ ...senderDraft, name: e.target.value })} placeholder="Lavoretty di Carta" />
         </Field>

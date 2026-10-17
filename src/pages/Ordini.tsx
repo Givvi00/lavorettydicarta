@@ -369,7 +369,7 @@ function OrderForm({
                 }
               }}
             >
-              {makingLabel ? 'Creo il PDF...' : 'Etichetta di spedizione A6 (PDF)'}
+              {makingLabel ? 'Creo il PDF...' : 'Etichetta di spedizione A5 (PDF)'}
             </SecondaryButton>
             {!hasShippingAddress(customer) && (
               <p className="text-xs font-semibold text-lc-muted">Aggiungi l'indirizzo di spedizione nella scheda del cliente.</p>

@@ -161,7 +161,7 @@ export function Materiali() {
         </Card>
       )}
 
-      {view === 'grid' && <StockGrid materials={filtered} />}
+      {view === 'grid' && <StockGrid materials={filtered} onOpen={setEditing} />}
 
       <div className={view === 'grid' ? 'hidden' : 'grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3'}>
         {filtered.length === 0 && (
