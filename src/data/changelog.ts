@@ -23,7 +23,7 @@ export const CHANGELOG: readonly ChangelogEntry[] = [
     date: '2026-10-17',
     items: [
       "Nella scheda cliente c'è l'indirizzo di spedizione, con il pulsante che crea l'etichetta in PDF formato A6, pronta da stampare.",
-      "Lo stesso pulsante è dentro l'ordine, per il cliente scelto. Il mittente (facoltativo) si imposta una volta da Impostazioni.",
+      "Lo stesso pulsante è dentro l'ordine, per il cliente scelto. In fondo all'etichetta c'è la fascia FRAGILE, ben visibile. Il mittente si può cambiare da Impostazioni.",
     ],
   },
   {

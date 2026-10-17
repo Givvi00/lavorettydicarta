@@ -132,7 +132,7 @@ export function CustomerForm({
   const { sender } = useSender();
 
   const wa = toWhatsAppLink(phone);
-  const recipient = { name, phone, shippingStreet: street, shippingZip: zip, shippingCity: city, shippingProvince: province, shippingCountry: country };
+  const recipient = { name, shippingStreet: street, shippingZip: zip, shippingCity: city, shippingProvince: province, shippingCountry: country };
   const canLabel = hasShippingAddress(recipient);
 
   async function makeLabel() {

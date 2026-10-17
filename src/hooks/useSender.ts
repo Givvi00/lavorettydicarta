@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { EMPTY_SENDER, type Sender } from '@/services/shippingLabel';
+import { DEFAULT_SENDER, type Sender } from '@/services/shippingLabel';
 
-// Dati del mittente stampati sull'etichetta. Come le tariffe, restano sul dispositivo in uso.
+// Dati del mittente stampati sull'etichetta (di base: Gabriele Vitale). Se cambiati, restano sul dispositivo in uso.
 const KEY = 'lc-sender';
 
 function getInitial(): Sender {
   try {
     const saved = localStorage.getItem(KEY);
-    if (saved) return { ...EMPTY_SENDER, ...JSON.parse(saved) };
+    if (saved) return { ...DEFAULT_SENDER, ...JSON.parse(saved) };
   } catch {
     // ignora, usa i default
   }
-  return EMPTY_SENDER;
+  return DEFAULT_SENDER;
 }
 
 export function useSender() {

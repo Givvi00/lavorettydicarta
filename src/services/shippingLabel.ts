@@ -7,12 +7,18 @@ export interface Sender {
   zip: string;
   city: string;
   province: string;
-  phone: string;
 }
 
-export const EMPTY_SENDER: Sender = { name: '', street: '', zip: '', city: '', province: '', phone: '' };
+// Mittente stampato sull'etichetta (modificabile da Impostazioni)
+export const DEFAULT_SENDER: Sender = {
+  name: 'Gabriele Vitale',
+  street: 'Via Donizetti 28',
+  zip: '51039',
+  city: 'Quarrata',
+  province: 'PT',
+};
 
-type Recipient = Pick<Customer, 'name' | 'phone' | 'shippingStreet' | 'shippingZip' | 'shippingCity' | 'shippingProvince' | 'shippingCountry'>;
+type Recipient = Pick<Customer, 'name' | 'shippingStreet' | 'shippingZip' | 'shippingCity' | 'shippingProvince' | 'shippingCountry'>;
 
 /** Un indirizzo è utilizzabile per l'etichetta se ci sono nome, via, CAP e città */
 export function hasShippingAddress(c: Recipient): boolean {
@@ -22,13 +28,14 @@ export function hasShippingAddress(c: Recipient): boolean {
 const PAGE_W = 105;
 const PAGE_H = 148;
 const MARGIN = 9;
+const BANNER_H = 22;
 
 function cityLine(zip?: string, city?: string, province?: string): string {
   const prov = province?.trim() ? ` (${province.trim().toUpperCase()})` : '';
   return `${zip?.trim() ?? ''} ${city?.trim() ?? ''}${prov}`.trim();
 }
 
-export async function downloadShippingLabel(recipient: Recipient, sender?: Sender): Promise<void> {
+export async function downloadShippingLabel(recipient: Recipient, sender: Sender = DEFAULT_SENDER): Promise<void> {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a6', orientation: 'portrait' });
   const innerW = PAGE_W - MARGIN * 2;
@@ -39,12 +46,10 @@ export async function downloadShippingLabel(recipient: Recipient, sender?: Sende
   doc.setLineWidth(0.5);
   doc.roundedRect(5, 5, PAGE_W - 10, PAGE_H - 10, 3, 3);
 
-  // mittente (piccolo, in alto) se compilato
-  const senderLines = sender
-    ? [sender.name, sender.street, cityLine(sender.zip, sender.city, sender.province), sender.phone ? `Tel. ${sender.phone}` : '']
-        .map((l) => l.trim())
-        .filter(Boolean)
-    : [];
+  // mittente (piccolo, in alto)
+  const senderLines = [sender.name, sender.street, cityLine(sender.zip, sender.city, sender.province)]
+    .map((l) => l.trim())
+    .filter(Boolean);
   if (senderLines.length > 0) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
@@ -79,7 +84,7 @@ export async function downloadShippingLabel(recipient: Recipient, sender?: Sende
   doc.setTextColor(0);
 
   // il nome si rimpicciolisce finché sta in al massimo due righe
-  let nameSize = 24;
+  let nameSize = 22;
   let nameLines = doc.setFontSize(nameSize).splitTextToSize(recipient.name.trim(), innerW) as string[];
   while (nameLines.length > 2 && nameSize > 13) {
     nameSize -= 1;
@@ -89,38 +94,50 @@ export async function downloadShippingLabel(recipient: Recipient, sender?: Sende
     doc.text(line, MARGIN, y);
     y += nameSize * 0.42;
   }
-  y += 4;
+  y += 3;
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(15);
+  doc.setFontSize(14);
   for (const part of doc.splitTextToSize(recipient.shippingStreet?.trim() ?? '', innerW) as string[]) {
     doc.text(part, MARGIN, y);
-    y += 7;
+    y += 6.5;
   }
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   for (const part of doc.splitTextToSize(cityLine(recipient.shippingZip, recipient.shippingCity, recipient.shippingProvince), innerW) as string[]) {
     doc.text(part, MARGIN, y);
-    y += 7.5;
+    y += 7;
   }
   const country = recipient.shippingCountry?.trim();
   if (country && !/^(italia|italy|it)$/i.test(country)) {
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.text(country.toUpperCase(), MARGIN, y);
-    y += 7;
-  }
-  if (recipient.phone?.trim()) {
-    y += 3;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.text(`Tel. ${recipient.phone.trim()}`, MARGIN, y);
   }
 
-  // firma discreta in fondo
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(140);
-  doc.text('Fragile: lavoretto fatto a mano', PAGE_W / 2, PAGE_H - 8, { align: 'center' });
+  // fascia FRAGILE in fondo: nera, con il bicchiere rotto e la scritta grande
+  const bx = MARGIN - 2;
+  const bw = PAGE_W - (MARGIN - 2) * 2;
+  const by = PAGE_H - 5 - 4 - BANNER_H;
+  doc.setFillColor(0, 0, 0);
+  doc.roundedRect(bx, by, bw, BANNER_H, 2.5, 2.5, 'F');
+
+  // simbolo: calice con una crepa
+  const gx = bx + 11;
+  const gy = by + 4.5;
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.9);
+  doc.triangle(gx - 6, gy, gx + 6, gy, gx, gy + 9.5, 'F');
+  doc.line(gx, gy + 9.5, gx, gy + 15.5);
+  doc.line(gx - 4, gy + 15.5, gx + 4, gy + 15.5);
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.6);
+  doc.lines([[2, 2.4], [-3, 2.2], [2.2, 2.6]], gx - 1.2, gy + 0.4, [1, 1], 'S');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(32);
+  doc.text('FRAGILE', bx + 21, by + BANNER_H / 2 + 5.4);
 
   const slug = recipient.name
     .toLowerCase()

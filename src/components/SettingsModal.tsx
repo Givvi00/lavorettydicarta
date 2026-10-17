@@ -53,7 +53,7 @@ export function SettingsModal({
         </Field>
 
         <p className="mt-2 text-sm font-semibold text-lc-muted">Mittente sulle etichette di spedizione</p>
-        <p className="text-sm text-lc-muted">Facoltativo: compare in alto sull'etichetta A6. Resta su questo dispositivo.</p>
+        <p className="text-sm text-lc-muted">Compare in alto sull'etichetta A6. Se lo cambi, resta su questo dispositivo.</p>
         <Field label="Nome o attività">
           <Input value={senderDraft.name} onChange={(e) => setSenderDraft({ ...senderDraft, name: e.target.value })} placeholder="Lavoretty di Carta" />
         </Field>
@@ -71,9 +71,6 @@ export function SettingsModal({
             <Input value={senderDraft.province} onChange={(e) => setSenderDraft({ ...senderDraft, province: e.target.value.slice(0, 2) })} autoComplete="off" />
           </Field>
         </div>
-        <Field label="Telefono">
-          <Input value={senderDraft.phone} onChange={(e) => setSenderDraft({ ...senderDraft, phone: e.target.value })} autoComplete="off" />
-        </Field>
 
         <p className="mt-2 text-sm font-semibold text-lc-muted">Guida</p>
         <SecondaryButton type="button" onClick={onReplayTour}>
