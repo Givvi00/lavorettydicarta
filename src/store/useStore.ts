@@ -108,6 +108,11 @@ export const useStore = create<LcState>((set, get) => ({
       email: input.email ?? existing?.email,
       instagram: input.instagram ?? existing?.instagram,
       notes: input.notes ?? existing?.notes,
+      shippingStreet: input.shippingStreet ?? existing?.shippingStreet,
+      shippingZip: input.shippingZip ?? existing?.shippingZip,
+      shippingCity: input.shippingCity ?? existing?.shippingCity,
+      shippingProvince: input.shippingProvince ?? existing?.shippingProvince,
+      shippingCountry: input.shippingCountry ?? existing?.shippingCountry,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };

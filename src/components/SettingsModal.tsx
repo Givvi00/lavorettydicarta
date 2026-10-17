@@ -4,6 +4,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { ChangelogSheet } from '@/components/WhatsNew';
 import { APP_VERSION, CHANGELOG } from '@/data/changelog';
 import { BUILD_ID, BUILD_DATE } from '@/utils/build';
+import { useSender } from '@/hooks/useSender';
 
 export function SettingsModal({
   open,
@@ -15,6 +16,8 @@ export function SettingsModal({
   onReplayTour: () => void;
 }) {
   const { rates, setRates } = useSettings();
+  const { sender, setSender } = useSender();
+  const [senderDraft, setSenderDraft] = useState(sender);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [designRate, setDesignRate] = useState(rates.designRate);
   const [productionRate, setProductionRate] = useState(rates.productionRate);
@@ -26,6 +29,7 @@ export function SettingsModal({
         onSubmit={(e) => {
           e.preventDefault();
           setRates({ designRate, productionRate });
+          setSender(senderDraft);
           onClose();
         }}
       >
@@ -46,6 +50,29 @@ export function SettingsModal({
             value={productionRate}
             onChange={(e) => setProductionRate(parseFloat(e.target.value) || 0)}
           />
+        </Field>
+
+        <p className="mt-2 text-sm font-semibold text-lc-muted">Mittente sulle etichette di spedizione</p>
+        <p className="text-sm text-lc-muted">Facoltativo: compare in alto sull'etichetta A6. Resta su questo dispositivo.</p>
+        <Field label="Nome o attività">
+          <Input value={senderDraft.name} onChange={(e) => setSenderDraft({ ...senderDraft, name: e.target.value })} placeholder="Lavoretty di Carta" />
+        </Field>
+        <Field label="Via e numero civico">
+          <Input value={senderDraft.street} onChange={(e) => setSenderDraft({ ...senderDraft, street: e.target.value })} autoComplete="off" />
+        </Field>
+        <div className="grid grid-cols-[6.5rem_1fr_4.5rem] gap-3">
+          <Field label="CAP">
+            <Input value={senderDraft.zip} onChange={(e) => setSenderDraft({ ...senderDraft, zip: e.target.value })} inputMode="numeric" autoComplete="off" />
+          </Field>
+          <Field label="Città">
+            <Input value={senderDraft.city} onChange={(e) => setSenderDraft({ ...senderDraft, city: e.target.value })} autoComplete="off" />
+          </Field>
+          <Field label="Prov.">
+            <Input value={senderDraft.province} onChange={(e) => setSenderDraft({ ...senderDraft, province: e.target.value.slice(0, 2) })} autoComplete="off" />
+          </Field>
+        </div>
+        <Field label="Telefono">
+          <Input value={senderDraft.phone} onChange={(e) => setSenderDraft({ ...senderDraft, phone: e.target.value })} autoComplete="off" />
         </Field>
 
         <p className="mt-2 text-sm font-semibold text-lc-muted">Guida</p>

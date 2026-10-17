@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/primitives';
 import { ClipboardList, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PageBar } from '@/components/ui/PageBar';
+import { useSender } from '@/hooks/useSender';
+import { downloadShippingLabel, hasShippingAddress } from '@/services/shippingLabel';
 import { CreateOrderByVoiceModal } from '@/components/CreateOrderByVoiceModal';
 import { useSettings } from '@/hooks/useSettings';
 import { formatEUR, orderSubtotal, orderTotal, newId, materialShortfallsFor, STOCK_DEDUCTED_STATUSES } from '@/utils/calc';
@@ -178,6 +180,9 @@ function OrderForm({
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [isGift, setIsGift] = useState(initial?.isGift ?? false);
   const { rates } = useSettings();
+  const { sender } = useSender();
+  const [makingLabel, setMakingLabel] = useState(false);
+  const customer = customers.find((c) => c.id === customerId);
 
   const subtotal = orderSubtotal({ items });
   const total = orderTotal({ items, discount });
@@ -348,6 +353,28 @@ function OrderForm({
               </ul>
             </div>
           )
+        )}
+
+        {customer && (
+          <div className="flex flex-col gap-1">
+            <SecondaryButton
+              type="button"
+              disabled={!hasShippingAddress(customer) || makingLabel}
+              onClick={async () => {
+                setMakingLabel(true);
+                try {
+                  await downloadShippingLabel(customer, sender);
+                } finally {
+                  setMakingLabel(false);
+                }
+              }}
+            >
+              {makingLabel ? 'Creo il PDF...' : 'Etichetta di spedizione A6 (PDF)'}
+            </SecondaryButton>
+            {!hasShippingAddress(customer) && (
+              <p className="text-xs font-semibold text-lc-muted">Aggiungi l'indirizzo di spedizione nella scheda del cliente.</p>
+            )}
+          </div>
         )}
 
         <label className="flex items-center gap-2 rounded-btn border-2 border-lc-border bg-lc-surface px-3 py-2 text-sm font-semibold">

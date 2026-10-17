@@ -17,6 +17,11 @@ export interface Customer {
   email?: string;
   instagram?: string;
   notes?: string;
+  shippingStreet?: string; // indirizzo di spedizione (via e numero)
+  shippingZip?: string;
+  shippingCity?: string;
+  shippingProvince?: string;
+  shippingCountry?: string;
   createdAt: number;
   updatedAt: number;
 }

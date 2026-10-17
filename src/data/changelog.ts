@@ -11,6 +11,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: readonly ChangelogEntry[] = [
   {
+    version: '1.7',
+    date: '2026-10-17',
+    items: [
+      "Nella scheda cliente c'è l'indirizzo di spedizione, con il pulsante che crea l'etichetta in PDF formato A6, pronta da stampare.",
+      "Lo stesso pulsante è dentro l'ordine, per il cliente scelto. Il mittente (facoltativo) si imposta una volta da Impostazioni.",
+    ],
+  },
+  {
     version: '1.6',
     date: '2026-10-12',
     items: [
